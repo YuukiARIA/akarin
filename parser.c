@@ -2,17 +2,18 @@
 #include "parser.h"
 #include "lexer.h"
 #include "operator.h"
+#include "node.h"
 
 struct parser_t {
   lexer_t *lexer;
 };
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
-static void parse_expr(parser_t *parser);
-static void parse_assign(parser_t *parser);
-static void parse_addsub(parser_t *parser);
-static void parse_muldiv(parser_t *parser);
-static void parse_atomic(parser_t *parser);
+static node_t *parse_expr(parser_t *parser);
+static node_t *parse_assign(parser_t *parser);
+static node_t *parse_addsub(parser_t *parser);
+static node_t *parse_muldiv(parser_t *parser);
+static node_t *parse_atomic(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
@@ -27,9 +28,11 @@ void parser_release(parser_t **pparser) {
 }
 
 void parser_parse(parser_t *parser) {
+  node_t *node;
   lexer_succ(parser->lexer);
   lexer_next(parser->lexer);
-  parse_expr(parser);
+  node = parse_expr(parser);
+  node_release(&node);
 }
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
@@ -52,61 +55,67 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   }
 }
 
-static void parse_expr(parser_t *parser) {
-  parse_assign(parser);
+static node_t *parse_expr(parser_t *parser) {
+  return parse_assign(parser);
 }
 
-static void parse_assign(parser_t *parser) {
-  parse_addsub(parser);
+static node_t *parse_assign(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_addsub(parser);
   if (lexer_ttype(parser->lexer) == TT_EQ) {
     lexer_next(parser->lexer);
-    parse_assign(parser);
-    puts("ASSIGN");
+    y = parse_assign(parser);
+    x = node_new_binary(BOP_ASSIGN, x, y);
   }
+  return x;
 }
 
-static void parse_addsub(parser_t *parser) {
-  parse_muldiv(parser);
+static node_t *parse_addsub(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_muldiv(parser);
   while (lexer_ttype(parser->lexer) == TT_PLUS || lexer_ttype(parser->lexer) == TT_MINUS) {
     binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
     lexer_next(parser->lexer);
-    parse_muldiv(parser);
-    printf("%s\n", binary_op_to_string(bop));
+    y = parse_muldiv(parser);
+    x = node_new_binary(bop, x, y);
   }
+  return x;
 }
 
-static void parse_muldiv(parser_t *parser) {
-  parse_atomic(parser);
+static node_t *parse_muldiv(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_atomic(parser);
   while (lexer_ttype(parser->lexer) == TT_ASTERISK || lexer_ttype(parser->lexer) == TT_SLASH || lexer_ttype(parser->lexer) == TT_PERCENT) {
     binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
     lexer_next(parser->lexer);
-    parse_atomic(parser);
-    printf("%s\n", binary_op_to_string(bop));
+    y = parse_atomic(parser);
+    x = node_new_binary(bop, x, y);
   }
+  return x;
 }
 
-static void parse_atomic(parser_t *parser) {
+static node_t *parse_atomic(parser_t *parser) {
+  node_t *node = NULL;
+  int value;
+
   switch (lexer_ttype(parser->lexer)) {
   case TT_INTEGER:
-    {
-      int ival = lexer_int_value(parser->lexer);
-      lexer_next(parser->lexer);
-      printf("PUSH %d\n", ival);
-    }
-    return;
+    value = lexer_int_value(parser->lexer);
+    lexer_next(parser->lexer);
+    return node_new_integer(value);
   case TT_SYMBOL:
-    {
-      printf("LOAD %s\n", lexer_text(parser->lexer));
-      lexer_next(parser->lexer);
-    }
-    return;
+    node = node_new_variable(lexer_text(parser->lexer));
+    lexer_next(parser->lexer);
+    return node;
   case TT_LPAREN:
     lexer_next(parser->lexer);
-    parse_expr(parser);
+    node = parse_expr(parser);
     lexer_next(parser->lexer);
-    return;
+    return node;
   default:
     break;
   }
+
   printf("unexpected: ttype=%d\n", lexer_ttype(parser->lexer));
+  return NULL;
 }
