@@ -27,12 +27,10 @@ void parser_release(parser_t **pparser) {
   *pparser = NULL;
 }
 
-void parser_parse(parser_t *parser) {
-  node_t *node;
+node_t *parser_parse(parser_t *parser) {
   lexer_succ(parser->lexer);
   lexer_next(parser->lexer);
-  node = parse_expr(parser);
-  node_release(&node);
+  return parse_expr(parser);
 }
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
