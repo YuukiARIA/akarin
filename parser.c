@@ -1,38 +1,13 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "lexer.h"
+#include "operator.h"
 
 struct parser_t {
   lexer_t *lexer;
 };
 
-typedef enum {
-  UOP_INVALID,
-  UOP_POSITIVE,
-  UOP_NEGATIVE,
-  UOP_NOT,
-} unary_op_t;
-
-typedef enum {
-  BOP_INVALID,
-  BOP_ADD,
-  BOP_SUB,
-  BOP_MUL,
-  BOP_DIV,
-  BOP_MOD,
-  BOP_EQ,
-  BOP_NEQ,
-  BOP_AND,
-  BOP_OR,
-  BOP_LT,
-  BOP_LE,
-  BOP_GT,
-  BOP_GE,
-  BOP_ASSIGN,
-} binary_op_t;
-
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
-static const char* binary_op_to_string(binary_op_t bop);
 static void parse_expr(parser_t *parser);
 static void parse_assign(parser_t *parser);
 static void parse_addsub(parser_t *parser);
@@ -74,25 +49,6 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   case TT_AMP:      return BOP_AND;
   case TT_BAR:      return BOP_OR;
   default:          return BOP_INVALID;
-  }
-}
-
-static const char* binary_op_to_string(binary_op_t bop) {
-  switch (bop) {
-  case BOP_EQ:  return "EQ";
-  case BOP_NEQ: return "NEQ";
-  case BOP_LT:  return "LT";
-  case BOP_LE:  return "LE";
-  case BOP_GT:  return "GT";
-  case BOP_GE:  return "GE";
-  case BOP_ADD: return "ADD";
-  case BOP_SUB: return "SUB";
-  case BOP_MUL: return "MUL";
-  case BOP_DIV: return "DIV";
-  case BOP_MOD: return "MOD";
-  case BOP_AND: return "AND";
-  case BOP_OR:  return "OR";
-  default:      return "INVALID";
   }
 }
 
