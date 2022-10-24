@@ -23,5 +23,6 @@ ntype_t     node_get_ntype(node_t *node);
 unary_op_t  node_get_uop(node_t *node);
 binary_op_t node_get_bop(node_t *node);
 int         node_get_value(node_t *node);
+const char *node_get_name(node_t *node);
 node_t     *node_get_l(node_t *node);
 node_t     *node_get_r(node_t *node);

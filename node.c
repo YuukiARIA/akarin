@@ -80,6 +80,10 @@ int node_get_value(node_t *node) {
   return node->value;
 }
 
+const char *node_get_name(node_t *node) {
+  return node->name;
+}
+
 node_t *node_get_l(node_t *node) {
   return node->l;
 }
