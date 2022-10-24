@@ -9,6 +9,7 @@ struct codegen_t {
 };
 
 static void gen(node_t *node);
+static void gen_unary(node_t *node);
 static void gen_assign(node_t *node);
 static void gen_arith(node_t *node);
 static void encode_integer(int n);
@@ -32,6 +33,9 @@ void codegen_generate(codegen_t *codegen) {
 
 static void gen(node_t *node) {
   switch (node_get_ntype(node)) {
+  case NT_UNARY:
+    gen_unary(node);
+    break;
   case NT_BINARY:
     if (node_get_bop(node) == BOP_ASSIGN) {
       gen_assign(node);
@@ -43,6 +47,19 @@ static void gen(node_t *node) {
   case NT_INTEGER:
     printf("SS");
     encode_integer(node_get_value(node));
+    break;
+  default:
+    break;
+  }
+}
+
+static void gen_unary(node_t *node) {
+  switch (node_get_uop(node)) {
+  case UOP_NEGATIVE: /* implement -x as 0 - x. */
+    printf("SS");
+    encode_integer(0);
+    gen(node_get_l(node));
+    printf("TSST");
     break;
   default:
     break;

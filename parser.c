@@ -101,6 +101,14 @@ static node_t *parse_atomic(parser_t *parser) {
     value = lexer_int_value(parser->lexer);
     lexer_next(parser->lexer);
     return node_new_integer(value);
+  case TT_PLUS:
+    /* simply ignore */
+    lexer_next(parser->lexer);
+    return parse_atomic(parser);
+  case TT_MINUS:
+    lexer_next(parser->lexer);
+    node = parse_atomic(parser);
+    return node_new_unary(UOP_NEGATIVE, node);
   case TT_SYMBOL:
     node = node_new_variable(lexer_text(parser->lexer));
     lexer_next(parser->lexer);
