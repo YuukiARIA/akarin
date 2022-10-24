@@ -1,6 +1,6 @@
 #include "operator.h"
 
-const char* unary_op_to_string(unary_op_t uop) {
+const char *unary_op_to_string(unary_op_t uop) {
   switch (uop) {
   case UOP_POSITIVE: return "POSITIVE";
   case UOP_NEGATIVE: return "NEGATIVE";
@@ -9,7 +9,7 @@ const char* unary_op_to_string(unary_op_t uop) {
   }
 }
 
-const char* binary_op_to_string(binary_op_t bop) {
+const char *binary_op_to_string(binary_op_t bop) {
   switch (bop) {
   case BOP_EQ:  return "EQ";
   case BOP_NEQ: return "NEQ";
