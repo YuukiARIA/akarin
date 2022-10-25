@@ -100,7 +100,13 @@ void lexer_lex_symbol(lexer_t *lexer) {
     lexer_succ(lexer);
   }
 
-  if (strcmp(lexer->text, "puti") == 0) {
+  if (strcmp(lexer->text, "if") == 0) {
+    lexer->ttype = TT_KW_IF;
+  }
+  else if (strcmp(lexer->text, "else") == 0) {
+    lexer->ttype = TT_KW_ELSE;
+  }
+  else if (strcmp(lexer->text, "puti") == 0) {
     lexer->ttype = TT_KW_PUTI;
   }
   else if (strcmp(lexer->text, "putc") == 0) {
