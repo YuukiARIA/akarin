@@ -77,7 +77,7 @@ static void gen(codegen_t *codegen, node_t *node) {
     {
       int var_index = get_var_index(codegen, node_get_name(node));
       printf("SS");
-      encode_uint((unsigned int)var_index);
+      encode_integer(var_index);
       printf("TTT");
     }
     break;
@@ -132,7 +132,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   int var_index = get_var_index(codegen, node_get_name(var));
 
   printf("SS"); /* PUSH */
-  encode_uint((unsigned int)var_index);
+  encode_integer(var_index);
   gen(codegen, expr);
   printf("TTS"); /* STORE */
 }
@@ -164,8 +164,7 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
 
 static void encode_integer(int n) {
   putchar(n >= 0 ? 'S' : 'T');
-  encode_uint_rec((unsigned int)abs(n));
-  putchar('L');
+  encode_uint((unsigned int)abs(n));
 }
 
 static void encode_uint(unsigned int n) {
