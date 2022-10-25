@@ -109,6 +109,9 @@ void lexer_lex_symbol(lexer_t *lexer) {
   else if (strcmp(lexer->text, "while") == 0) {
     lexer->ttype = TT_KW_WHILE;
   }
+  else if (strcmp(lexer->text, "break") == 0) {
+    lexer->ttype = TT_KW_BREAK;
+  }
   else if (strcmp(lexer->text, "puti") == 0) {
     lexer->ttype = TT_KW_PUTI;
   }
