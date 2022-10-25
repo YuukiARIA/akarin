@@ -35,3 +35,4 @@ int         node_get_value(node_t *node);
 const char *node_get_name(node_t *node);
 node_t     *node_get_l(node_t *node);
 node_t     *node_get_r(node_t *node);
+node_t     *node_get_cond(node_t *node);

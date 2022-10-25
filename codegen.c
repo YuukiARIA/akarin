@@ -9,6 +9,7 @@ struct codegen_t {
 };
 
 static void gen(node_t *node);
+static void gen_if_statement(node_t *node);
 static void gen_unary(node_t *node);
 static void gen_assign(node_t *node);
 static void gen_arith(node_t *node);
@@ -37,6 +38,9 @@ static void gen(node_t *node) {
     gen(node_get_l(node));
     gen(node_get_r(node));
     break;
+  case NT_IF:
+    gen_if_statement(node);
+    break;
   case NT_PUTI:
     gen(node_get_l(node));
     printf("TLST");
@@ -63,6 +67,26 @@ static void gen(node_t *node) {
   default:
     break;
   }
+}
+
+static void gen_if_statement(node_t *node) {
+  node_t *cond = node_get_cond(node), *then = node_get_l(node), *els = node_get_r(node);
+
+  gen(cond);
+
+  /* IF FALSE GOTO L1 */
+
+  gen(then);
+
+  /* GOTO L2 */
+
+  /* L1 */
+
+  if (els) {
+    gen(els);
+  }
+
+  /* L2 */
 }
 
 static void gen_unary(node_t *node) {

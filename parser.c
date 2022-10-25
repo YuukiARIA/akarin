@@ -11,6 +11,7 @@ struct parser_t {
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
 static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
+static node_t *parse_if_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
@@ -87,6 +88,8 @@ static node_t *parse_statement(parser_t *parser) {
   switch (lexer_ttype(parser->lexer)) {
   case TT_LBRACE:
     return parse_block(parser);
+  case TT_KW_IF:
+    return parse_if_statement(parser);
   case TT_KW_PUTI:
     node = parse_puti(parser);
     break;
@@ -103,6 +106,32 @@ static node_t *parse_statement(parser_t *parser) {
   }
 
   return node;
+}
+
+static node_t *parse_if_statement(parser_t *parser) {
+  node_t *cond = NULL, *then = NULL, *els = NULL;
+
+  if (lexer_ttype(parser->lexer) == TT_KW_IF) {
+    lexer_next(parser->lexer);
+    if (lexer_ttype(parser->lexer) == TT_LPAREN) {
+      lexer_next(parser->lexer);
+
+      cond = parse_expr(parser);
+
+      if (lexer_ttype(parser->lexer) == TT_RPAREN) {
+        lexer_next(parser->lexer);
+      }
+
+      then = parse_statement(parser);
+    }
+  }
+  if (lexer_ttype(parser->lexer) == TT_KW_ELSE) {
+    lexer_next(parser->lexer);
+
+    els = parse_statement(parser);
+  }
+
+  return node_new_if(cond, then, els);
 }
 
 static node_t *parse_puti(parser_t *parser) {

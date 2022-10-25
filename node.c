@@ -119,3 +119,7 @@ node_t *node_get_l(node_t *node) {
 node_t *node_get_r(node_t *node) {
   return node->r;
 }
+
+node_t *node_get_cond(node_t *node) {
+  return node->cond;
+}
