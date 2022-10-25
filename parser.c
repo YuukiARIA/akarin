@@ -17,6 +17,9 @@ static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
+static node_t *parse_or(parser_t *parser);
+static node_t *parse_and(parser_t *parser);
+static node_t *parse_comparison(parser_t *parser);
 static node_t *parse_addsub(parser_t *parser);
 static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
@@ -189,11 +192,50 @@ static node_t *parse_expr(parser_t *parser) {
 
 static node_t *parse_assign(parser_t *parser) {
   node_t *x, *y;
-  x = parse_addsub(parser);
+  x = parse_or(parser);
   if (lexer_ttype(parser->lexer) == TT_EQ) {
     lexer_next(parser->lexer);
     y = parse_assign(parser);
     x = node_new_binary(BOP_ASSIGN, x, y);
+  }
+  return x;
+}
+
+static node_t *parse_or(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_and(parser);
+  while (lexer_ttype(parser->lexer) == TT_BAR) {
+    lexer_next(parser->lexer);
+    y = parse_and(parser);
+    x = node_new_binary(BOP_OR, x, y);
+  }
+  return x;
+}
+
+static node_t *parse_and(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_comparison(parser);
+  while (lexer_ttype(parser->lexer) == TT_AMP) {
+    lexer_next(parser->lexer);
+    y = parse_comparison(parser);
+    x = node_new_binary(BOP_AND, x, y);
+  }
+  return x;
+}
+
+static node_t *parse_comparison(parser_t *parser) {
+  node_t *x, *y;
+  x = parse_addsub(parser);
+  while (lexer_ttype(parser->lexer) == TT_EQEQ ||
+         lexer_ttype(parser->lexer) == TT_EXCLAEQ ||
+         lexer_ttype(parser->lexer) == TT_LT ||
+         lexer_ttype(parser->lexer) == TT_LE ||
+         lexer_ttype(parser->lexer) == TT_GT ||
+         lexer_ttype(parser->lexer) == TT_GE) {
+    binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
+    lexer_next(parser->lexer);
+    y = parse_addsub(parser);
+    x = node_new_binary(bop, x, y);
   }
   return x;
 }
@@ -239,6 +281,10 @@ static node_t *parse_atomic(parser_t *parser) {
     lexer_next(parser->lexer);
     node = parse_atomic(parser);
     return node_new_unary(UOP_NEGATIVE, node);
+  case TT_EXCLA:
+    lexer_next(parser->lexer);
+    node = parse_atomic(parser);
+    return node_new_unary(UOP_NOT, node);
   case TT_SYMBOL:
     node = node_new_variable(lexer_text(parser->lexer));
     lexer_next(parser->lexer);
