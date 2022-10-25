@@ -134,6 +134,19 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
     gen(codegen, node_get_l(node));
     printf("TSST");
     break;
+  case UOP_NOT:
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      gen(codegen, node_get_l(node));
+      gen_jz(l1);
+      gen_push(0);
+      gen_jmp(l2);
+      gen_label(l1);
+      gen_push(1);
+      gen_label(l2);
+    }
+    break;
   default:
     break;
   }
