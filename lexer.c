@@ -135,6 +135,15 @@ static int lex_op(lexer_t *lexer) {
     }
     lexer->ttype = TT_EQ;
     return 1;
+  case '!':
+    lexer_succ(lexer);
+    if (lexer_peek(lexer) == '=') {
+      lexer_succ(lexer);
+      lexer->ttype = TT_EXCLAEQ;
+      return 1;
+    }
+    lexer->ttype = TT_EXCLA;
+    return 1;
   case '&':
     lexer_succ(lexer);
     lexer->ttype = TT_AMP;
