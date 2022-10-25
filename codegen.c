@@ -19,6 +19,7 @@ static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
 static void gen_push(int value);
+static void gen_pop(void);
 static void gen_jmp(int label_id);
 static void gen_jz(int label_id);
 static void gen_jneg(int label_id);
@@ -184,8 +185,41 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     printf("TSTT");
     break;
   case BOP_OR:
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      int l3 = alloc_label_id(codegen);
+      gen_jz(l1);
+      gen_pop();
+      gen_push(1);
+      gen_jmp(l3);
+      gen_label(l1);
+      gen_jz(l2);
+      gen_push(1);
+      gen_jmp(l3);
+      gen_label(l2);
+      gen_push(0);
+      gen_label(l3);
+    }
     break;
   case BOP_AND:
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      int l3 = alloc_label_id(codegen);
+      int l4 = alloc_label_id(codegen);
+      gen_jz(l1);
+      gen_jz(l2);
+      gen_jmp(l3);
+      gen_label(l1);
+      gen_pop();
+      gen_label(l2);
+      gen_push(0);
+      gen_jmp(l4);
+      gen_label(l3);
+      gen_push(1);
+      gen_label(l4);
+    }
     break;
   case BOP_EQ:
     {
@@ -275,6 +309,10 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
 static void gen_push(int value) {
   printf("SS");
   encode_integer(value);
+}
+
+static void gen_pop(void) {
+  printf("SLL");
 }
 
 static void gen_jmp(int label_id) {
