@@ -79,14 +79,12 @@ static void gen(codegen_t *codegen, node_t *node) {
     }
     break;
   case NT_INTEGER:
-    printf("SS");
-    encode_integer(node_get_value(node));
+    gen_push(node_get_value(node));
     break;
   case NT_VARIABLE:
     {
       int var_index = get_var_index(codegen, node_get_name(node));
-      printf("SS");
-      encode_integer(var_index);
+      gen_push(var_index);
       printf("TTT");
     }
     break;
@@ -130,8 +128,7 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
 static void gen_unary(codegen_t *codegen, node_t *node) {
   switch (node_get_uop(node)) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
-    printf("SS");
-    encode_integer(0);
+    gen_push(0);
     gen(codegen, node_get_l(node));
     printf("TSST");
     break;
@@ -158,8 +155,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   node_t *expr = node_get_r(node);
   int var_index = get_var_index(codegen, node_get_name(var));
 
-  printf("SS"); /* PUSH */
-  encode_integer(var_index);
+  gen_push(var_index); /* PUSH */
   gen(codegen, expr);
   printf("TTS"); /* STORE */
 }
