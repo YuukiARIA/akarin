@@ -10,11 +10,13 @@ struct codegen_t {
   int     label_count;
   int     var_count;
   char    vars[256][64];
+  int     cur_label_tail;
 };
 
 static void gen(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
+static void gen_break_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
@@ -34,6 +36,7 @@ codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)malloc(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
+  codegen->cur_label_tail = -1;
   return codegen;
 }
 
@@ -58,6 +61,9 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_WHILE:
     gen_while_statement(codegen, node);
+    break;
+  case NT_BREAK:
+    gen_break_statement(codegen, node);
     break;
   case NT_PUTI:
     gen(codegen, node_get_l(node));
@@ -120,9 +126,23 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
   gen_label(label_head);
   gen(codegen, cond);
   gen_jz(label_tail);
+
+  codegen->cur_label_tail = label_tail;
   gen(codegen, body);
+  codegen->cur_label_tail = -1;
+
   gen_jmp(label_head);
   gen_label(label_tail);
+}
+
+static void gen_break_statement(codegen_t *codegen, node_t *node) {
+  int label = codegen->cur_label_tail;
+  if (label == -1) {
+    fputs("illegal break statement.", stderr);
+    return;
+  }
+
+  gen_jmp(label);
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
