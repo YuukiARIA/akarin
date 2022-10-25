@@ -13,6 +13,7 @@ static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
 static node_t *parse_if_statement(parser_t *parser);
 static node_t *parse_while_statement(parser_t *parser);
+static node_t *parse_break_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
@@ -96,6 +97,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_if_statement(parser);
   case TT_KW_WHILE:
     return parse_while_statement(parser);
+  case TT_KW_BREAK:
+    return parse_break_statement(parser);
   case TT_KW_PUTI:
     node = parse_puti(parser);
     break;
@@ -160,6 +163,13 @@ static node_t *parse_while_statement(parser_t *parser) {
   }
 
   return node_new_while(cond, body);
+}
+
+static node_t *parse_break_statement(parser_t *parser) {
+  if (lexer_ttype(parser->lexer) == TT_KW_BREAK) {
+    lexer_next(parser->lexer);
+  }
+  return node_new_break();
 }
 
 static node_t *parse_puti(parser_t *parser) {

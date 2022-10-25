@@ -87,6 +87,10 @@ node_t *node_new_while(node_t *cond, node_t *body) {
   return node;
 }
 
+node_t *node_new_break(void) {
+  return node_new(NT_BREAK);
+}
+
 node_t *node_new_puti(node_t *expr) {
   node_t *node = node_new(NT_PUTI);
   node->l = expr;
