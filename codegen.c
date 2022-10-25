@@ -18,6 +18,7 @@ static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
+static void gen_push(int value);
 static void gen_jmp(int label_id);
 static void gen_jz(int label_id);
 static void gen_jneg(int label_id);
@@ -169,9 +170,98 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
   case BOP_MOD:
     printf("TSTT");
     break;
+  case BOP_OR:
+    break;
+  case BOP_AND:
+    break;
+  case BOP_EQ:
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("TSST");  /* SUB */
+      gen_jz(l1);      /* JZ L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
+  case BOP_NEQ:
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("TSST");  /* SUB */
+      gen_jz(l1);      /* JZ L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
+  case BOP_LT: /* x < y --> x - y < 0 */
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("TSST");  /* SUB */
+      gen_jneg(l1);    /* JNEG L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
+  case BOP_LE: /* x <= y --> !(y - x < 0) */
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("SLT");   /* SWAP */
+      printf("TSST");  /* SUB */
+      gen_jneg(l1);    /* JNEG L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
+  case BOP_GT: /* x > y --> y - x < 0 */
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("SLT");   /* SWAP */
+      printf("TSST");  /* SUB */
+      gen_jneg(l1);    /* JNEG L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
+  case BOP_GE: /* x >= y --> !(x - y < 0) */
+    {
+      int l1 = alloc_label_id(codegen);
+      int l2 = alloc_label_id(codegen);
+      printf("TSST");  /* SUB */
+      gen_jneg(l1);    /* JNEG L1 */
+      gen_push(1);     /* PUSH 1 */
+      gen_jmp(l2);     /* JMP L2 */
+      gen_label(l1);   /* :L1 */
+      gen_push(0);     /* PUSH 0 */
+      gen_label(l2);   /* :L2 */
+    }
+    break;
   default:
     break;
   }
+}
+
+static void gen_push(int value) {
+  printf("SS");
+  encode_integer(value);
 }
 
 static void gen_jmp(int label_id) {
