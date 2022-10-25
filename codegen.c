@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "codegen.h"
 #include "node.h"
 #include "operator.h"
@@ -7,6 +8,8 @@
 struct codegen_t {
   node_t *root;
   int     label_count;
+  int     var_count;
+  char    vars[256][64];
 };
 
 static void gen(codegen_t *codegen, node_t *node);
@@ -19,6 +22,7 @@ static void encode_uint(unsigned int n);
 static void encode_uint_rec(unsigned int n);
 static int  alloc_label_id(codegen_t *codegen);
 static void gen_label(int label_id);
+static int  get_var_index(codegen_t *codegen, const char *name);
 
 codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)malloc(sizeof(codegen_t));
@@ -69,6 +73,14 @@ static void gen(codegen_t *codegen, node_t *node) {
     printf("SS");
     encode_integer(node_get_value(node));
     break;
+  case NT_VARIABLE:
+    {
+      int var_index = get_var_index(codegen, node_get_name(node));
+      printf("SS");
+      encode_uint((unsigned int)var_index);
+      printf("TTT");
+    }
+    break;
   default:
     break;
   }
@@ -115,7 +127,11 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_assign(codegen_t *codegen, node_t *node) {
+  int var_index = get_var_index(codegen, node_get_name(node));
+  printf("SS"); /* PUSH */
+  encode_uint((unsigned int)var_index);
   gen(codegen, node_get_r(node));
+  printf("TTS"); /* STORE */
 }
 
 static void gen_arith(codegen_t *codegen, node_t *node) {
@@ -173,4 +189,18 @@ static int alloc_label_id(codegen_t *codegen) {
 static void gen_label(int label_id) {
   printf("LSS");
   encode_uint((unsigned int)label_id);
+}
+
+static int get_var_index(codegen_t *codegen, const char *name) {
+  int i;
+  for (i = 0; i < codegen->var_count; ++i) {
+    if (strcmp(codegen->vars[i], name) == 0) {
+      return i;
+    }
+  }
+
+  /* register name */
+  i = codegen->var_count++;
+  strcpy(codegen->vars[i], name);
+  return i;
 }
