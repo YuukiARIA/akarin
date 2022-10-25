@@ -25,5 +25,8 @@ typedef enum {
   TT_INTEGER,
   TT_SYMBOL,
 
+  TT_KW_PUTI,
+  TT_KW_PUTC,
+
   TT_EOF = -1,
 } ttype_t;

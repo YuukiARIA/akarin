@@ -64,6 +64,18 @@ node_t *node_new_variable(const char *name) {
   return node;
 }
 
+node_t *node_new_puti(node_t *expr) {
+  node_t *node = node_new(NT_PUTI);
+  node->l = expr;
+  return node;
+}
+
+node_t *node_new_putc(node_t *expr) {
+  node_t *node = node_new(NT_PUTC);
+  node->l = expr;
+  return node;
+}
+
 ntype_t node_get_ntype(node_t *node) {
   return node->ntype;
 }

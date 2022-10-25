@@ -33,6 +33,14 @@ void codegen_generate(codegen_t *codegen) {
 
 static void gen(node_t *node) {
   switch (node_get_ntype(node)) {
+  case NT_PUTI:
+    gen(node_get_l(node));
+    printf("TLST");
+    break;
+  case NT_PUTC:
+    gen(node_get_l(node));
+    printf("TLSS");
+    break;
   case NT_UNARY:
     gen_unary(node);
     break;

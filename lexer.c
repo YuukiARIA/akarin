@@ -99,7 +99,16 @@ void lexer_lex_symbol(lexer_t *lexer) {
     append_char(lexer, lexer_peek(lexer));
     lexer_succ(lexer);
   }
-  lexer->ttype = TT_SYMBOL;
+
+  if (strcmp(lexer->text, "puti") == 0) {
+    lexer->ttype = TT_KW_PUTI;
+  }
+  else if (strcmp(lexer->text, "putc") == 0) {
+    lexer->ttype = TT_KW_PUTC;
+  }
+  else {
+    lexer->ttype = TT_SYMBOL;
+  }
 }
 
 static int lex_op(lexer_t *lexer) {

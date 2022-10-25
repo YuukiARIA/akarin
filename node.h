@@ -8,6 +8,8 @@ typedef enum {
   NT_BINARY,
   NT_INTEGER,
   NT_VARIABLE,
+  NT_PUTI,
+  NT_PUTC,
 } ntype_t;
 
 typedef struct node_t node_t;
@@ -17,6 +19,9 @@ node_t     *node_new_unary(unary_op_t uop, node_t *arg);
 node_t     *node_new_binary(binary_op_t bop, node_t *lhs, node_t *rhs);
 node_t     *node_new_integer(int value);
 node_t     *node_new_variable(const char *name);
+node_t     *node_new_puti(node_t *expr);
+node_t     *node_new_putc(node_t *expr);
+
 void        node_release(node_t **pnode);
 
 ntype_t     node_get_ntype(node_t *node);
