@@ -180,6 +180,14 @@ static int lex_op(lexer_t *lexer) {
     lexer_succ(lexer);
     lexer->ttype = TT_RPAREN;
     return 1;
+  case '{':
+    lexer_succ(lexer);
+    lexer->ttype = TT_LBRACE;
+    return 1;
+  case '}':
+    lexer_succ(lexer);
+    lexer->ttype = TT_RBRACE;
+    return 1;
   }
 
   return 0;

@@ -23,6 +23,8 @@ typedef enum {
 
   TT_LPAREN,
   TT_RPAREN,
+  TT_LBRACE,
+  TT_RBRACE,
 
   TT_INTEGER,
   TT_SYMBOL,

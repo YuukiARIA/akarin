@@ -9,6 +9,8 @@ struct parser_t {
 };
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
+static node_t *parse_block(parser_t *parser);
+static node_t *parse_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
@@ -30,31 +32,9 @@ void parser_release(parser_t **pparser) {
 }
 
 node_t *parser_parse(parser_t *parser) {
-  node_t *root = NULL, *node = NULL;
-
   lexer_succ(parser->lexer);
   lexer_next(parser->lexer);
-  while (lexer_ttype(parser->lexer) != TT_EOF) {
-    switch (lexer_ttype(parser->lexer)) {
-    case TT_KW_PUTI:
-      node = parse_puti(parser);
-      break;
-    case TT_KW_PUTC:
-      node = parse_putc(parser);
-      break;
-    default:
-      node = parse_expr(parser);
-      break;
-    }
-    if (!root) {
-      root = node;
-    }
-    else {
-      root = node_new_seq(root, node);
-    }
-  }
-
-  return root;
+  return parse_statement(parser);
 }
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
@@ -75,6 +55,54 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   case TT_BAR:      return BOP_OR;
   default:          return BOP_INVALID;
   }
+}
+
+static node_t *parse_block(parser_t *parser) {
+  node_t *root = NULL, *node = NULL;
+
+  if (lexer_ttype(parser->lexer) == TT_LBRACE) {
+    lexer_next(parser->lexer);
+  }
+
+  while (lexer_ttype(parser->lexer) != TT_RBRACE) {
+    node = parse_statement(parser);
+    if (!root) {
+      root = node;
+    }
+    else {
+      root = node_new_seq(root, node);
+    }
+  }
+
+  if (lexer_ttype(parser->lexer) == TT_RBRACE) {
+    lexer_next(parser->lexer);
+  }
+
+  return root;
+}
+
+static node_t *parse_statement(parser_t *parser) {
+  node_t *node = NULL;
+
+  switch (lexer_ttype(parser->lexer)) {
+  case TT_LBRACE:
+    return parse_block(parser);
+  case TT_KW_PUTI:
+    node = parse_puti(parser);
+    break;
+  case TT_KW_PUTC:
+    node = parse_putc(parser);
+    break;
+  default:
+    node = parse_expr(parser);
+    break;
+  }
+
+  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+    lexer_next(parser->lexer);
+  }
+
+  return node;
 }
 
 static node_t *parse_puti(parser_t *parser) {
