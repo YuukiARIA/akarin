@@ -12,6 +12,7 @@ struct node_t {
   char        name[VARIABLE_NAME_MAX + 1];
   node_t     *l;
   node_t     *r;
+  node_t     *cond;
 };
 
 node_t *node_new(ntype_t ntype) {
@@ -68,6 +69,14 @@ node_t *node_new_integer(int value) {
 node_t *node_new_variable(const char *name) {
   node_t *node = node_new(NT_VARIABLE);
   strncpy(node->name, name, VARIABLE_NAME_MAX);
+  return node;
+}
+
+node_t *node_new_if(node_t *cond, node_t *then, node_t *els) {
+  node_t *node = node_new(NT_IF);
+  node->cond = cond;
+  node->l = then;
+  node->r = els;
   return node;
 }
 
