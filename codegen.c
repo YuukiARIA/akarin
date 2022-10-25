@@ -14,9 +14,13 @@ struct codegen_t {
 
 static void gen(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
+static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
+static void gen_jmp(int label_id);
+static void gen_jz(int label_id);
+static void gen_jneg(int label_id);
 static void encode_integer(int n);
 static void encode_uint(unsigned int n);
 static void encode_uint_rec(unsigned int n);
@@ -49,6 +53,9 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_IF:
     gen_if_statement(codegen, node);
+    break;
+  case NT_WHILE:
+    gen_while_statement(codegen, node);
     break;
   case NT_PUTI:
     gen(codegen, node_get_l(node));
@@ -113,6 +120,20 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
   gen_label(l2);
 }
 
+static void gen_while_statement(codegen_t *codegen, node_t *node) {
+  node_t *cond = node_get_cond(node);
+  node_t *body = node_get_l(node);
+  int label_head = alloc_label_id(codegen);
+  int label_tail = alloc_label_id(codegen);
+
+  gen_label(label_head);
+  gen(codegen, cond);
+  gen_jz(label_tail);
+  gen(codegen, body);
+  gen_jmp(label_head);
+  gen_label(label_tail);
+}
+
 static void gen_unary(codegen_t *codegen, node_t *node) {
   switch (node_get_uop(node)) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
@@ -160,6 +181,21 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
   default:
     break;
   }
+}
+
+static void gen_jmp(int label_id) {
+  printf("LSL");
+  encode_uint((unsigned int)label_id);
+}
+
+static void gen_jz(int label_id) {
+  printf("LTS");
+  encode_uint((unsigned int)label_id);
+}
+
+static void gen_jneg(int label_id) {
+  printf("LTT");
+  encode_uint((unsigned int)label_id);
 }
 
 static void encode_integer(int n) {
