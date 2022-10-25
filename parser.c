@@ -169,6 +169,9 @@ static node_t *parse_break_statement(parser_t *parser) {
   if (lexer_ttype(parser->lexer) == TT_KW_BREAK) {
     lexer_next(parser->lexer);
   }
+  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+    lexer_next(parser->lexer);
+  }
   return node_new_break();
 }
 
