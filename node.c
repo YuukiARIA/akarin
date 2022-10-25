@@ -37,6 +37,13 @@ void node_release(node_t **pnode) {
   *pnode = NULL;
 }
 
+node_t *node_new_seq(node_t *first, node_t *second) {
+  node_t *node = node_new(NT_SEQ);
+  node->l = first;
+  node->r = second;
+  return node;
+}
+
 node_t *node_new_unary(unary_op_t uop, node_t *arg) {
   node_t *node = node_new(NT_UNARY);
   node->uop = uop;

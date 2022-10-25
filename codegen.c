@@ -33,6 +33,10 @@ void codegen_generate(codegen_t *codegen) {
 
 static void gen(node_t *node) {
   switch (node_get_ntype(node)) {
+  case NT_SEQ:
+    gen(node_get_l(node));
+    gen(node_get_r(node));
+    break;
   case NT_PUTI:
     gen(node_get_l(node));
     printf("TLST");
