@@ -12,6 +12,7 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype);
 static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
 static node_t *parse_if_statement(parser_t *parser);
+static node_t *parse_while_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
@@ -90,6 +91,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_block(parser);
   case TT_KW_IF:
     return parse_if_statement(parser);
+  case TT_KW_WHILE:
+    return parse_while_statement(parser);
   case TT_KW_PUTI:
     node = parse_puti(parser);
     break;
@@ -132,6 +135,28 @@ static node_t *parse_if_statement(parser_t *parser) {
   }
 
   return node_new_if(cond, then, els);
+}
+
+static node_t *parse_while_statement(parser_t *parser) {
+  node_t *cond = NULL, *body = NULL;
+
+  if (lexer_ttype(parser->lexer) == TT_KW_WHILE) {
+    lexer_next(parser->lexer);
+
+    if (lexer_ttype(parser->lexer) == TT_LPAREN) {
+      lexer_next(parser->lexer);
+
+      cond = parse_expr(parser);
+
+      if (lexer_ttype(parser->lexer) == TT_RPAREN) {
+        lexer_next(parser->lexer);
+      }
+
+      body = parse_statement(parser);
+    }
+  }
+
+  return node_new_while(cond, body);
 }
 
 static node_t *parse_puti(parser_t *parser) {

@@ -80,6 +80,13 @@ node_t *node_new_if(node_t *cond, node_t *then, node_t *els) {
   return node;
 }
 
+node_t *node_new_while(node_t *cond, node_t *body) {
+  node_t *node = node_new(NT_WHILE);
+  node->cond = cond;
+  node->l = body;
+  return node;
+}
+
 node_t *node_new_puti(node_t *expr) {
   node_t *node = node_new(NT_PUTI);
   node->l = expr;
