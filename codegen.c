@@ -127,10 +127,13 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_assign(codegen_t *codegen, node_t *node) {
-  int var_index = get_var_index(codegen, node_get_name(node));
+  node_t *var = node_get_l(node);
+  node_t *expr = node_get_r(node);
+  int var_index = get_var_index(codegen, node_get_name(var));
+
   printf("SS"); /* PUSH */
   encode_uint((unsigned int)var_index);
-  gen(codegen, node_get_r(node));
+  gen(codegen, expr);
   printf("TTS"); /* STORE */
 }
 
