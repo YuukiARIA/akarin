@@ -94,29 +94,20 @@ static void gen(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_if_statement(codegen_t *codegen, node_t *node) {
-  node_t *cond = node_get_cond(node), *then = node_get_l(node), *els = node_get_r(node);
-  int l1 = alloc_label_id(codegen), l2 = alloc_label_id(codegen);
+  node_t *cond = node_get_cond(node);
+  node_t *then = node_get_l(node);
+  node_t *els = node_get_r(node);
+  int l1 = alloc_label_id(codegen);
+  int l2 = alloc_label_id(codegen);
 
   gen(codegen, cond);
-
-  /* IF FALSE GOTO L1 */
-  printf("LTS");
-  encode_uint((unsigned int)l1);
-
+  gen_jz(l1);
   gen(codegen, then);
-
-  /* GOTO L2 */
-  printf("LSL");
-  encode_uint((unsigned int)l2);
-
-  /* L1 */
+  gen_jmp(l2);
   gen_label(l1);
-
   if (els) {
     gen(codegen, els);
   }
-
-  /* L2 */
   gen_label(l2);
 }
 
