@@ -182,7 +182,7 @@ static int lex_op(lexer_t *lexer) {
 }
 
 void lexer_next(lexer_t *lexer) {
-  int c, i;
+  int c;
 
   lexer_skip_ws(lexer);
 
