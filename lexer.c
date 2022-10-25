@@ -113,6 +113,10 @@ void lexer_lex_symbol(lexer_t *lexer) {
 
 static int lex_op(lexer_t *lexer) {
   switch (lexer_peek(lexer)) {
+  case ';':
+    lexer_succ(lexer);
+    lexer->ttype = TT_SEMICOLON;
+    return 1;
   case '=':
     lexer_succ(lexer);
     if (lexer_peek(lexer) == '=') {
