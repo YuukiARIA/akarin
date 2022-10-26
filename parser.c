@@ -28,6 +28,7 @@ static node_t *parse_addsub(parser_t *parser);
 static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
 static node_t *parse_variable(parser_t *parser);
+static node_t *parse_array_indexer(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
@@ -367,7 +368,11 @@ static node_t *parse_atomic(parser_t *parser) {
     node = parse_atomic(parser);
     return node_new_unary(UOP_NOT, node);
   case TT_SYMBOL:
-    return parse_variable(parser);
+    node = parse_variable(parser);
+    if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+      node = node_new_array(node, parse_array_indexer(parser));
+    }
+    return node;
   case TT_LPAREN:
     lexer_next(parser->lexer);
     node = parse_expr(parser);
@@ -389,4 +394,16 @@ static node_t *parse_variable(parser_t *parser) {
     lexer_next(parser->lexer);
   }
   return node;
+}
+
+static node_t *parse_array_indexer(parser_t *parser) {
+  node_t *indexer = NULL;
+  if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+    lexer_next(parser->lexer);
+  }
+  indexer = parse_expr(parser);
+  if (lexer_ttype(parser->lexer) == TT_RBRACKET) {
+    lexer_next(parser->lexer);
+  }
+  return indexer;
 }

@@ -72,6 +72,13 @@ node_t *node_new_variable(const char *name) {
   return node;
 }
 
+node_t *node_new_array(node_t *var, node_t *indexer) {
+  node_t *node = node_new(NT_ARRAY);
+  node->l = var;
+  node->r = indexer;
+  return node;
+}
+
 node_t *node_new_if(node_t *cond, node_t *then, node_t *els) {
   node_t *node = node_new(NT_IF);
   node->cond = cond;

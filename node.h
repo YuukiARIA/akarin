@@ -9,6 +9,7 @@ typedef enum {
   NT_BINARY,
   NT_INTEGER,
   NT_VARIABLE,
+  NT_ARRAY,
   NT_IF,
   NT_WHILE,
   NT_BREAK,
@@ -27,6 +28,7 @@ node_t     *node_new_unary(unary_op_t uop, node_t *arg);
 node_t     *node_new_binary(binary_op_t bop, node_t *lhs, node_t *rhs);
 node_t     *node_new_integer(int value);
 node_t     *node_new_variable(const char *name);
+node_t     *node_new_array(node_t *var, node_t *indexer);
 node_t     *node_new_if(node_t *cond, node_t *then, node_t *els);
 node_t     *node_new_while(node_t *cond, node_t *body);
 node_t     *node_new_break(void);
