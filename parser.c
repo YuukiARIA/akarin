@@ -283,6 +283,7 @@ static node_t *parse_atomic(parser_t *parser) {
 
   switch (lexer_ttype(parser->lexer)) {
   case TT_INTEGER:
+  case TT_CHAR:
     value = lexer_int_value(parser->lexer);
     lexer_next(parser->lexer);
     return node_new_integer(value);

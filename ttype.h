@@ -27,6 +27,7 @@ typedef enum {
   TT_RBRACE,
 
   TT_INTEGER,
+  TT_CHAR,
   TT_SYMBOL,
 
   TT_KW_IF,

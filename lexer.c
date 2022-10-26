@@ -91,6 +91,47 @@ static void lexer_lex_integer(lexer_t *lexer) {
   lexer->ivalue = atoi(lexer->text);
 }
 
+static void lex_char(lexer_t *lexer) {
+  int c = 0;
+
+  if (lexer_peek(lexer) == '\'') {
+    lexer_succ(lexer);
+  }
+
+  if (lexer_peek(lexer) == '\\') {
+    lexer_succ(lexer);
+    switch (lexer_peek(lexer)) {
+    case 'r':
+      c = '\r';
+      break;
+    case 'n':
+      c = '\n';
+      break;
+    case 't':
+      c = '\t';
+      break;
+    case '\\':
+      c = '\\';
+      break;
+    case '\'':
+      c = '\'';
+      break;
+    }
+    lexer_succ(lexer);
+  }
+  else if (isprint(lexer_peek(lexer))) {
+    c = lexer_peek(lexer);
+    lexer_succ(lexer);
+  }
+
+  if (lexer_peek(lexer) == '\'') {
+    lexer_succ(lexer);
+  }
+
+  lexer->ttype = TT_CHAR;
+  lexer->ivalue = c;
+}
+
 void lexer_lex_symbol(lexer_t *lexer) {
   clear_buf(lexer);
   while (isalpha(lexer_peek(lexer))) {
@@ -226,7 +267,11 @@ void lexer_next(lexer_t *lexer) {
     return;
   }
 
-  if (isdigit(c)) {
+  if (c == '\'') {
+    lex_char(lexer);
+    return;
+  }
+  else if (isdigit(c)) {
     lexer_lex_integer(lexer);
     return;
   }
