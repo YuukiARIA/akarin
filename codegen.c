@@ -97,6 +97,15 @@ static void gen(codegen_t *codegen, node_t *node) {
       printf("TTT");
     }
     break;
+  case NT_ARRAY:
+    {
+      int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
+      gen_push(var_index);
+      gen(codegen, node_get_r(node));
+      printf("TSSS"); /* ADD */
+      printf("TTT"); /* LOAD */
+    }
+    break;
   case NT_GETI:
     gen_geti_statement(codegen, node);
     break;
