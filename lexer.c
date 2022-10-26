@@ -71,6 +71,9 @@ int lexer_succ(lexer_t *lexer) {
     ++lexer->line;
     lexer->column = 0;
   }
+  else {
+    ++lexer->column;
+  }
   lexer->cur = c;
   return c;
 }
