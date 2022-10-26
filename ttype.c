@@ -25,6 +25,8 @@ const char *ttype_to_string(ttype_t ttype) {
     CASE_RETURN(TT_RPAREN);
     CASE_RETURN(TT_LBRACE);
     CASE_RETURN(TT_RBRACE);
+    CASE_RETURN(TT_LBRACKET);
+    CASE_RETURN(TT_RBRACKET);
     CASE_RETURN(TT_INTEGER);
     CASE_RETURN(TT_CHAR);
     CASE_RETURN(TT_SYMBOL);
@@ -36,6 +38,7 @@ const char *ttype_to_string(ttype_t ttype) {
     CASE_RETURN(TT_KW_PUTC);
     CASE_RETURN(TT_KW_GETI);
     CASE_RETURN(TT_KW_GETC);
+    CASE_RETURN(TT_KW_ARRAY);
     CASE_RETURN(TT_EOF);
   default:
     return "(UNDEFINED)";

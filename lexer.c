@@ -180,6 +180,9 @@ void lexer_lex_symbol(lexer_t *lexer) {
   else if (strcmp(lexer->text, "getc") == 0) {
     lexer->ttype = TT_KW_GETC;
   }
+  else if (strcmp(lexer->text, "array") == 0) {
+    lexer->ttype = TT_KW_ARRAY;
+  }
   else {
     lexer->ttype = TT_SYMBOL;
   }
@@ -270,6 +273,14 @@ static int lex_op(lexer_t *lexer) {
   case '}':
     lexer_succ(lexer);
     lexer->ttype = TT_RBRACE;
+    return 1;
+  case '[':
+    lexer_succ(lexer);
+    lexer->ttype = TT_LBRACKET;
+    return 1;
+  case ']':
+    lexer_succ(lexer);
+    lexer->ttype = TT_RBRACKET;
     return 1;
   }
 

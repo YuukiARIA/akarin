@@ -25,6 +25,8 @@ typedef enum {
   TT_RPAREN,
   TT_LBRACE,
   TT_RBRACE,
+  TT_LBRACKET,
+  TT_RBRACKET,
 
   TT_INTEGER,
   TT_CHAR,
@@ -38,6 +40,7 @@ typedef enum {
   TT_KW_PUTC,
   TT_KW_GETI,
   TT_KW_GETC,
+  TT_KW_ARRAY,
 
   TT_EOF = -1,
 } ttype_t;
