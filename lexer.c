@@ -15,6 +15,7 @@ struct lexer_t {
   int     bufpos;
   char    text[TEXT_BUF_SIZE];
   ttype_t ttype;
+  int     ivalue;
 };
 
 static void clear_buf(lexer_t *lexer) {
@@ -53,7 +54,7 @@ ttype_t lexer_ttype(lexer_t *lexer) {
 }
 
 int lexer_int_value(lexer_t *lexer) {
-  return atoi(lexer->text);
+  return lexer->ivalue;
 }
 
 const char *lexer_text(lexer_t *lexer) {
@@ -87,6 +88,7 @@ static void lexer_lex_integer(lexer_t *lexer) {
     lexer_succ(lexer);
   }
   lexer->ttype = TT_INTEGER;
+  lexer->ivalue = atoi(lexer->text);
 }
 
 void lexer_lex_symbol(lexer_t *lexer) {
@@ -212,6 +214,8 @@ static int lex_op(lexer_t *lexer) {
 
 void lexer_next(lexer_t *lexer) {
   int c;
+
+  lexer->ivalue = 0;
 
   lexer_skip_ws(lexer);
 
