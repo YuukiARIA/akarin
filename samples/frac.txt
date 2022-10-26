@@ -1,0 +1,30 @@
+# Print digits of fraction a/b.
+
+{
+  geti a;
+  geti b;
+
+  if (b == 0) {
+    putc 'E';
+    putc 'R';
+    putc 'R';
+    putc 'O';
+    putc 'R';
+    putc '!';
+    putc '\n';
+  }
+  else {
+    puti a / b;
+    putc '.';
+
+    n = 10;
+    while (n > 0) {
+      a = a % b * 10;
+      if (!a) { break; }
+      puti a / b;
+      n = n - 1;
+    }
+
+    putc '\n';
+  }
+}
