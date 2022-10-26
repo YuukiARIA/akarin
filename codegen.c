@@ -33,6 +33,7 @@ static void encode_uint_rec(unsigned int n);
 static int  alloc_label_id(codegen_t *codegen);
 static void gen_label(int label_id);
 static int  get_var_index(codegen_t *codegen, const char *name);
+static int  allocate(codegen_t *codegen, const char *name, int size);
 
 codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)malloc(sizeof(codegen_t));
@@ -417,7 +418,12 @@ static int get_var_index(codegen_t *codegen, const char *name) {
   }
 
   /* register name */
-  i = codegen->var_count++;
+  return allocate(codegen, name, 1);
+}
+
+static int allocate(codegen_t *codegen, const char *name, int size) {
+  int i = codegen->var_count;
   strcpy(codegen->vars[i], name);
+  codegen->var_count += size;
   return i;
 }
