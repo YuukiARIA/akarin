@@ -56,10 +56,6 @@ int lexer_int_value(lexer_t *lexer) {
   return atoi(lexer->text);
 }
 
-float lexer_float_value(lexer_t *lexer) {
-  return (float)atof(lexer->text);
-}
-
 const char *lexer_text(lexer_t *lexer) {
   return lexer->text;
 }
