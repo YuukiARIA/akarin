@@ -106,10 +106,7 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_ARRAY_DECL:
     {
       int size = node_get_value(node);
-      int i;
-      for (i = 0; i < size; ++i) {
-        get_var_index(codegen, node_get_name(node));
-      }
+      allocate(codegen, node_get_name(node_get_l(node)), size);
     }
     break;
   default:
