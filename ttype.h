@@ -41,3 +41,5 @@ typedef enum {
 
   TT_EOF = -1,
 } ttype_t;
+
+const char *ttype_to_string(ttype_t ttype);

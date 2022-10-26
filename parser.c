@@ -345,7 +345,8 @@ static node_t *parse_atomic(parser_t *parser) {
     break;
   }
 
-  printf("unexpected: ttype=%d\n", lexer_ttype(parser->lexer));
+  fprintf(stderr, "unexpected %s\n", ttype_to_string(lexer_ttype(parser->lexer)));
+  lexer_next(parser->lexer);
   return NULL;
 }
 
