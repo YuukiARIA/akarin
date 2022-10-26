@@ -78,9 +78,23 @@ int lexer_succ(lexer_t *lexer) {
   return c;
 }
 
-void lexer_skip_ws(lexer_t *lexer) {
-  while (isspace(lexer_peek(lexer))) {
+void skip_to_end_of_line(lexer_t *lexer) {
+  while (!lexer_is_eof(lexer) && lexer_peek(lexer) != '\n') {
     lexer_succ(lexer);
+  }
+}
+
+void lexer_skip_ws(lexer_t *lexer) {
+  while (!lexer_is_eof(lexer)) {
+    if (isspace(lexer_peek(lexer))) {
+      lexer_succ(lexer);
+    }
+    else if (lexer_peek(lexer) == '#') {
+      skip_to_end_of_line(lexer);
+    }
+    else {
+      break;
+    }
   }
 }
 
