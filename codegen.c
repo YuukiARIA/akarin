@@ -209,11 +209,29 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_assign(codegen_t *codegen, node_t *node) {
-  node_t *var = node_get_l(node);
+  node_t *lhs = node_get_l(node);
   node_t *expr = node_get_r(node);
-  int var_index = get_var_index(codegen, node_get_name(var));
 
-  gen_push(var_index); /* PUSH */
+  switch (node_get_ntype(lhs)) {
+  case NT_VARIABLE:
+    {
+      int var_index = get_var_index(codegen, node_get_name(lhs));
+      gen_push(var_index);
+    }
+    break;
+  case NT_ARRAY:
+    {
+      int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
+      gen_push(var_index);
+      gen(codegen, node_get_r(lhs));
+      printf("TSSS"); /* ADD */
+    }
+    break;
+  default:
+    fprintf(stderr, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
+    return;
+  }
+
   gen(codegen, expr);
   printf("TTS"); /* STORE */
 }
