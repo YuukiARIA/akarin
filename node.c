@@ -115,6 +115,13 @@ node_t *node_new_getc(node_t *var) {
   return node;
 }
 
+node_t *node_new_array_decl(node_t *var, int size) {
+  node_t *node = node_new(NT_ARRAY_DECL);
+  node->l = var;
+  node->value = size;
+  return node;
+}
+
 ntype_t node_get_ntype(node_t *node) {
   return node->ntype;
 }

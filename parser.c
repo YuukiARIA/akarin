@@ -18,6 +18,7 @@ static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
 static node_t *parse_geti(parser_t *parser);
 static node_t *parse_getc(parser_t *parser);
+static node_t *parse_array_statement(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
 static node_t *parse_or(parser_t *parser);
@@ -113,6 +114,9 @@ static node_t *parse_statement(parser_t *parser) {
     break;
   case TT_KW_GETC:
     node = parse_getc(parser);
+    break;
+  case TT_KW_ARRAY:
+    node = parse_array_statement(parser);
     break;
   default:
     node = parse_expr(parser);
@@ -228,6 +232,34 @@ static node_t *parse_getc(parser_t *parser) {
     lexer_next(parser->lexer);
   }
   return node;
+}
+
+static node_t *parse_array_statement(parser_t *parser) {
+  node_t *var;
+  int size;
+
+  if (lexer_ttype(parser->lexer) == TT_KW_ARRAY) {
+    lexer_next(parser->lexer);
+  }
+
+  var = parse_variable(parser);
+
+  if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+    lexer_next(parser->lexer);
+  }
+
+  size = lexer_int_value(parser->lexer);
+  lexer_next(parser->lexer);
+
+  if (lexer_ttype(parser->lexer) == TT_RBRACKET) {
+    lexer_next(parser->lexer);
+  }
+
+  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+    lexer_next(parser->lexer);
+  }
+
+  return node_new_array_decl(var, size);
 }
 
 static node_t *parse_expr(parser_t *parser) {

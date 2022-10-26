@@ -102,6 +102,15 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_GETC:
     gen_getc_statement(codegen, node);
     break;
+  case NT_ARRAY_DECL:
+    {
+      int size = node_get_value(node);
+      int i;
+      for (i = 0; i < size; ++i) {
+        get_var_index(codegen, node_get_name(node));
+      }
+    }
+    break;
   default:
     break;
   }
