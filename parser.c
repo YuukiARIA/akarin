@@ -16,6 +16,8 @@ static node_t *parse_while_statement(parser_t *parser);
 static node_t *parse_break_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
 static node_t *parse_putc(parser_t *parser);
+static node_t *parse_geti(parser_t *parser);
+static node_t *parse_getc(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
 static node_t *parse_or(parser_t *parser);
@@ -24,6 +26,7 @@ static node_t *parse_comparison(parser_t *parser);
 static node_t *parse_addsub(parser_t *parser);
 static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
+static node_t *parse_variable(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
@@ -104,6 +107,12 @@ static node_t *parse_statement(parser_t *parser) {
     break;
   case TT_KW_PUTC:
     node = parse_putc(parser);
+    break;
+  case TT_KW_GETI:
+    node = parse_geti(parser);
+    break;
+  case TT_KW_GETC:
+    node = parse_getc(parser);
     break;
   default:
     node = parse_expr(parser);
@@ -189,6 +198,32 @@ static node_t *parse_putc(parser_t *parser) {
   node_t *node;
   lexer_next(parser->lexer);
   node = node_new_putc(parse_expr(parser));
+  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+    lexer_next(parser->lexer);
+  }
+  return node;
+}
+
+/*
+ * <<GetIStatement>> ::= 'geti' <Variable> ';'
+ */
+static node_t *parse_geti(parser_t *parser) {
+  node_t *node;
+  lexer_next(parser->lexer);
+  node = node_new_geti(parse_variable(parser));
+  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+    lexer_next(parser->lexer);
+  }
+  return node;
+}
+
+/*
+ * <<GetCStatement>> ::= 'getc' <Variable> ';'
+ */
+static node_t *parse_getc(parser_t *parser) {
+  node_t *node;
+  lexer_next(parser->lexer);
+  node = node_new_getc(parse_variable(parser));
   if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
     lexer_next(parser->lexer);
   }
@@ -300,9 +335,7 @@ static node_t *parse_atomic(parser_t *parser) {
     node = parse_atomic(parser);
     return node_new_unary(UOP_NOT, node);
   case TT_SYMBOL:
-    node = node_new_variable(lexer_text(parser->lexer));
-    lexer_next(parser->lexer);
-    return node;
+    return parse_variable(parser);
   case TT_LPAREN:
     lexer_next(parser->lexer);
     node = parse_expr(parser);
@@ -314,4 +347,13 @@ static node_t *parse_atomic(parser_t *parser) {
 
   printf("unexpected: ttype=%d\n", lexer_ttype(parser->lexer));
   return NULL;
+}
+
+static node_t *parse_variable(parser_t *parser) {
+  node_t *node = NULL;
+  if (lexer_ttype(parser->lexer) == TT_SYMBOL) {
+    node = node_new_variable(lexer_text(parser->lexer));
+    lexer_next(parser->lexer);
+  }
+  return node;
 }

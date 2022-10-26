@@ -36,6 +36,8 @@ typedef enum {
   TT_KW_BREAK,
   TT_KW_PUTI,
   TT_KW_PUTC,
+  TT_KW_GETI,
+  TT_KW_GETC,
 
   TT_EOF = -1,
 } ttype_t;

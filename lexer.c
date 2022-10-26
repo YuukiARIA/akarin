@@ -157,6 +157,12 @@ void lexer_lex_symbol(lexer_t *lexer) {
   else if (strcmp(lexer->text, "putc") == 0) {
     lexer->ttype = TT_KW_PUTC;
   }
+  else if (strcmp(lexer->text, "geti") == 0) {
+    lexer->ttype = TT_KW_GETI;
+  }
+  else if (strcmp(lexer->text, "getc") == 0) {
+    lexer->ttype = TT_KW_GETC;
+  }
   else {
     lexer->ttype = TT_SYMBOL;
   }

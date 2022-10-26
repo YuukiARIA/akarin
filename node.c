@@ -103,6 +103,18 @@ node_t *node_new_putc(node_t *expr) {
   return node;
 }
 
+node_t *node_new_geti(node_t *var) {
+  node_t *node = node_new(NT_GETI);
+  node->l = var;
+  return node;
+}
+
+node_t *node_new_getc(node_t *var) {
+  node_t *node = node_new(NT_GETC);
+  node->l = var;
+  return node;
+}
+
 ntype_t node_get_ntype(node_t *node) {
   return node->ntype;
 }

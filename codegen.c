@@ -17,6 +17,8 @@ static void gen(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
+static void gen_geti_statement(codegen_t *codegen, node_t *node);
+static void gen_getc_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
@@ -94,6 +96,12 @@ static void gen(codegen_t *codegen, node_t *node) {
       printf("TTT");
     }
     break;
+  case NT_GETI:
+    gen_geti_statement(codegen, node);
+    break;
+  case NT_GETC:
+    gen_getc_statement(codegen, node);
+    break;
   default:
     break;
   }
@@ -143,6 +151,20 @@ static void gen_break_statement(codegen_t *codegen, node_t *node) {
   }
 
   gen_jmp(label);
+}
+
+static void gen_geti_statement(codegen_t *codegen, node_t *node) {
+  node_t *var = node_get_l(node);
+  int var_index = get_var_index(codegen, node_get_name(var));
+  gen_push(var_index);
+  printf("TLTT");
+}
+
+static void gen_getc_statement(codegen_t *codegen, node_t *node) {
+  node_t *var = node_get_l(node);
+  int var_index = get_var_index(codegen, node_get_name(var));
+  gen_push(var_index);
+  printf("TLTS");
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {

@@ -14,6 +14,8 @@ typedef enum {
   NT_BREAK,
   NT_PUTI,
   NT_PUTC,
+  NT_GETI,
+  NT_GETC,
 } ntype_t;
 
 typedef struct node_t node_t;
@@ -29,6 +31,8 @@ node_t     *node_new_while(node_t *cond, node_t *body);
 node_t     *node_new_break(void);
 node_t     *node_new_puti(node_t *expr);
 node_t     *node_new_putc(node_t *expr);
+node_t     *node_new_geti(node_t *var);
+node_t     *node_new_getc(node_t *var);
 
 void        node_release(node_t **pnode);
 
