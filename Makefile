@@ -2,8 +2,9 @@ CFLAGS  = -Wall -O2
 SRCS    = $(wildcard src/*.c)
 OBJS    = $(SRCS:src/%.c=obj/%.o)
 TARGET  = ./bin/akarin
+PREFIX  = /usr/local/bin
 
-.PHONY: clean
+.PHONY: clean install
 
 $(TARGET): $(OBJS)
 	@mkdir -p bin
@@ -16,5 +17,8 @@ obj/%.o: src/%.c
 
 clean:
 	$(RM) -rf ./obj ./bin ./deps
+
+install:
+	install -m 755 $(TARGET) $(PREFIX)
 
 -include $(wildcard ./deps/*.d)
