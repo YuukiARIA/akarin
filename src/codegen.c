@@ -24,6 +24,12 @@ static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_arith(codegen_t *codegen, node_t *node);
 static void gen_push(int value);
 static void gen_pop(void);
+static void gen_swap(void);
+static void gen_add(void);
+static void gen_sub(void);
+static void gen_mul(void);
+static void gen_div(void);
+static void gen_mod(void);
 static void gen_jmp(int label_id);
 static void gen_jz(int label_id);
 static void gen_jneg(int label_id);
@@ -104,7 +110,7 @@ static void gen(codegen_t *codegen, node_t *node) {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
       gen_push(var_index);
       gen(codegen, node_get_r(node));
-      printf("TSSS"); /* ADD */
+      gen_add(); /* ADD */
       printf("TTT"); /* LOAD */
     }
     break;
@@ -193,7 +199,7 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
     gen_push(0);
     gen(codegen, node_get_l(node));
-    printf("TSST");
+    gen_sub();
     break;
   case UOP_NOT:
     {
@@ -229,7 +235,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
       gen_push(var_index);
       gen(codegen, node_get_r(lhs));
-      printf("TSSS"); /* ADD */
+      gen_add(); /* ADD */
     }
     break;
   default:
@@ -247,19 +253,19 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
 
   switch (node_get_bop(node)) {
   case BOP_ADD:
-    printf("TSSS");
+    gen_add();
     break;
   case BOP_SUB:
-    printf("TSST");
+    gen_sub();
     break;
   case BOP_MUL:
-    printf("TSSL");
+    gen_mul();
     break;
   case BOP_DIV:
-    printf("TSTS");
+    gen_div();
     break;
   case BOP_MOD:
-    printf("TSTT");
+    gen_mod();
     break;
   case BOP_OR:
     {
@@ -302,7 +308,7 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("TSST");  /* SUB */
+      gen_sub();       /* SUB */
       gen_jz(l1);      /* JZ L1 */
       gen_push(0);     /* PUSH 0 */
       gen_jmp(l2);     /* JMP L2 */
@@ -315,7 +321,7 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("TSST");  /* SUB */
+      gen_sub();       /* SUB */
       gen_jz(l1);      /* JZ L1 */
       gen_push(1);     /* PUSH 1 */
       gen_jmp(l2);     /* JMP L2 */
@@ -328,7 +334,7 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("TSST");  /* SUB */
+      gen_sub();       /* SUB */
       gen_jneg(l1);    /* JNEG L1 */
       gen_push(0);     /* PUSH 0 */
       gen_jmp(l2);     /* JMP L2 */
@@ -341,8 +347,8 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("SLT");   /* SWAP */
-      printf("TSST");  /* SUB */
+      gen_swap();      /* SWAP */
+      gen_sub();       /* SUB */
       gen_jneg(l1);    /* JNEG L1 */
       gen_push(1);     /* PUSH 1 */
       gen_jmp(l2);     /* JMP L2 */
@@ -355,8 +361,8 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("SLT");   /* SWAP */
-      printf("TSST");  /* SUB */
+      gen_swap();      /* SWAP */
+      gen_sub();       /* SUB */
       gen_jneg(l1);    /* JNEG L1 */
       gen_push(0);     /* PUSH 0 */
       gen_jmp(l2);     /* JMP L2 */
@@ -369,7 +375,7 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      printf("TSST");  /* SUB */
+      gen_sub();       /* SUB */
       gen_jneg(l1);    /* JNEG L1 */
       gen_push(1);     /* PUSH 1 */
       gen_jmp(l2);     /* JMP L2 */
@@ -390,6 +396,30 @@ static void gen_push(int value) {
 
 static void gen_pop(void) {
   printf("SLL");
+}
+
+static void gen_swap(void) {
+  printf("SLT");
+}
+
+static void gen_add(void) {
+  printf("TSSS");
+}
+
+static void gen_sub(void) {
+  printf("TSST");
+}
+
+static void gen_mul(void) {
+  printf("TSSL");
+}
+
+static void gen_div(void) {
+  printf("TSTS");
+}
+
+static void gen_mod(void) {
+  printf("TSTT");
 }
 
 static void gen_jmp(int label_id) {
