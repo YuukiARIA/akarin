@@ -12,19 +12,19 @@
     putc 'R';
     putc '!';
     putc '\n';
+    halt;
   }
-  else {
+
+  puti a / b;
+  putc '.';
+
+  n = 10;
+  while (n > 0) {
+    a = a % b * 10;
+    if (!a) { break; }
     puti a / b;
-    putc '.';
-
-    n = 10;
-    while (n > 0) {
-      a = a % b * 10;
-      if (!a) { break; }
-      puti a / b;
-      n = n - 1;
-    }
-
-    putc '\n';
+    n = n - 1;
   }
+
+  putc '\n';
 }
