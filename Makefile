@@ -1,25 +1,20 @@
 CFLAGS  = -Wall -O2
 SRCS    = $(wildcard src/*.c)
-HEADERS = $(wildcard src/*.h)
 OBJS    = $(SRCS:src/%.c=obj/%.o)
 TARGET  = ./bin/akarin
-DEPS    = .depends.inc
 
 .PHONY: clean
 
-$(TARGET): $(OBJS) bin/
+$(TARGET): $(OBJS)
+	@mkdir -p bin
 	$(CC) $(OBJS) -o $(TARGET)
 
-obj/%.o: src/%.c obj/
+obj/%.o: src/%.c
+	@mkdir -p obj deps
 	$(CC) $(CFLAGS) -c $< -o $@
-
-obj/ bin/:
-	mkdir $@
-
-$(DEPS): $(SRCS) $(HEADERS)
-	$(CC) -MMD $(SRCS) > $(DEPS)
+	$(CC) -MT $@ -MM $< > deps/$*.d
 
 clean:
-	$(RM) -rf ./obj ./bin $(DEPS)
+	$(RM) -rf ./obj ./bin ./deps
 
--include $(DEPS)
+-include $(wildcard ./deps/*.d)
