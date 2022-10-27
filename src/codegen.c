@@ -30,6 +30,10 @@ static void gen_sub(void);
 static void gen_mul(void);
 static void gen_div(void);
 static void gen_mod(void);
+static void gen_putc(void);
+static void gen_puti(void);
+static void gen_getc(void);
+static void gen_geti(void);
 static void gen_jmp(int label_id);
 static void gen_jz(int label_id);
 static void gen_jneg(int label_id);
@@ -78,11 +82,11 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_PUTI:
     gen(codegen, node_get_l(node));
-    printf("TLST");
+    gen_puti();
     break;
   case NT_PUTC:
     gen(codegen, node_get_l(node));
-    printf("TLSS");
+    gen_putc();
     break;
   case NT_UNARY:
     gen_unary(codegen, node);
@@ -184,14 +188,14 @@ static void gen_geti_statement(codegen_t *codegen, node_t *node) {
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
   gen_push(var_index);
-  printf("TLTT");
+  gen_geti();
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
   gen_push(var_index);
-  printf("TLTS");
+  gen_getc();
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
@@ -420,6 +424,22 @@ static void gen_div(void) {
 
 static void gen_mod(void) {
   printf("TSTT");
+}
+
+static void gen_putc(void) {
+  printf("TLSS");
+}
+
+static void gen_puti(void) {
+  printf("TLST");
+}
+
+static void gen_getc(void) {
+  printf("TLTS");
+}
+
+static void gen_geti(void) {
+  printf("TLTT");
 }
 
 static void gen_jmp(int label_id) {
