@@ -30,6 +30,8 @@ static void gen_sub(void);
 static void gen_mul(void);
 static void gen_div(void);
 static void gen_mod(void);
+static void gen_store(void);
+static void gen_load(void);
 static void gen_putc(void);
 static void gen_puti(void);
 static void gen_getc(void);
@@ -106,7 +108,7 @@ static void gen(codegen_t *codegen, node_t *node) {
     {
       int var_index = get_var_index(codegen, node_get_name(node));
       gen_push(var_index);
-      printf("TTT");
+      gen_load();
     }
     break;
   case NT_ARRAY:
@@ -114,8 +116,8 @@ static void gen(codegen_t *codegen, node_t *node) {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
       gen_push(var_index);
       gen(codegen, node_get_r(node));
-      gen_add(); /* ADD */
-      printf("TTT"); /* LOAD */
+      gen_add();
+      gen_load();
     }
     break;
   case NT_GETI:
@@ -239,7 +241,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
       gen_push(var_index);
       gen(codegen, node_get_r(lhs));
-      gen_add(); /* ADD */
+      gen_add();
     }
     break;
   default:
@@ -248,7 +250,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   }
 
   gen(codegen, expr);
-  printf("TTS"); /* STORE */
+  gen_store();
 }
 
 static void gen_arith(codegen_t *codegen, node_t *node) {
@@ -424,6 +426,14 @@ static void gen_div(void) {
 
 static void gen_mod(void) {
   printf("TSTT");
+}
+
+static void gen_store(void) {
+  printf("TTS");
+}
+
+static void gen_load(void) {
+  printf("TTT");
 }
 
 static void gen_putc(void) {
