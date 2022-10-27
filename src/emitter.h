@@ -22,6 +22,7 @@ struct emitter_t {
   void (*jz)(emitter_t *self, int label);
   void (*jneg)(emitter_t *self, int label);
   void (*halt)(emitter_t *self);
+  void (*end)(emitter_t *self);
 };
 
 void emitter_release(emitter_t **pemitter);
@@ -47,6 +48,7 @@ void emit_jmp(emitter_t *emitter, int label);
 void emit_jz(emitter_t *emitter, int label);
 void emit_jneg(emitter_t *emitter, int label);
 void emit_halt(emitter_t *emitter);
+void emit_end(emitter_t *emitter);
 
 #define EMITTER_OVERRIDE_ONE(OBJ, PREFIX, INST) (OBJ).INST = PREFIX ## _ ## INST
 #define EMITTER_OVERRIDE(OBJ, PREFIX) \
@@ -70,4 +72,5 @@ void emit_halt(emitter_t *emitter);
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, jz   ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, jneg ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, halt ); \
+    EMITTER_OVERRIDE_ONE(OBJ, PREFIX, end  ); \
   } while (0)

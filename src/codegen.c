@@ -45,7 +45,7 @@ void codegen_release(codegen_t **pcodegen) {
 void codegen_generate(codegen_t *codegen) {
   gen(codegen, codegen->root);
   emit_halt(codegen->emitter);
-  putchar('\n');
+  emit_end(codegen->emitter);
 }
 
 static void gen(codegen_t *codegen, node_t *node) {

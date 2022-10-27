@@ -81,3 +81,7 @@ void emit_jneg(emitter_t *emitter, int label) {
 void emit_halt(emitter_t *emitter) {
   emitter->halt(emitter);
 }
+
+void emit_end(emitter_t *emitter) {
+  emitter->end(emitter);
+}

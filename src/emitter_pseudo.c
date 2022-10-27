@@ -26,6 +26,7 @@ static void pseudo_jmp(emitter_t *self, int label);
 static void pseudo_jz(emitter_t *self, int label);
 static void pseudo_jneg(emitter_t *self, int label);
 static void pseudo_halt(emitter_t *self);
+static void pseudo_end(emitter_t *self);
 
 static void indent_puts(emitter_t *self, const char *str);
 static void indent(emitter_t *self);
@@ -118,6 +119,9 @@ static void pseudo_jneg(emitter_t *self, int label) {
 
 static void pseudo_halt(emitter_t *self) {
   indent_puts(self, "HALT");
+}
+
+static void pseudo_end(emitter_t *self) {
 }
 
 static void indent_puts(emitter_t *self, const char *str) {

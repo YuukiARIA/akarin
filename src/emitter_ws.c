@@ -28,6 +28,7 @@ static void ws_jmp(emitter_t *self, int label_id);
 static void ws_jz(emitter_t *self, int label_id);
 static void ws_jneg(emitter_t *self, int label_id);
 static void ws_halt(emitter_t *self);
+static void ws_end(emitter_t *self);
 
 static void encode_integer(emitter_t *self, int n);
 static void encode_uint(emitter_t *self, unsigned int n);
@@ -126,6 +127,15 @@ static void ws_jneg(emitter_t *self, int label_id) {
 
 static void ws_halt(emitter_t *self) {
   emit_chars(self, "LLL");
+}
+
+static void ws_end(emitter_t *self) {
+  emitter_ws_t *emitter = (emitter_ws_t *)self;
+
+  /* if set to non-pure whitespace format, print newline on the end */
+  if (emitter->space != ' ' || emitter->tab != '\t' || emitter->newline != '\n') {
+    putchar('\n');
+  }
 }
 
 static void encode_integer(emitter_t *self, int n) {
