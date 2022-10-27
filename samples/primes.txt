@@ -1,0 +1,29 @@
+# Print prime numbers up to 50.
+
+{
+  array np[50];
+
+  i = 3;
+  while (i * i < 50) {
+    if (!np[i]) {
+      j = i + i;
+      while (j < 50) {
+        np[j] = 1;
+        j = j + i;
+      }
+    }
+    i = i + 2;
+  }
+
+  puti 2; # only number that is even and prime.
+  putc '\n';
+
+  i = 3;
+  while (i < 50) {
+    if (!np[i]) {
+      puti i;
+      putc '\n';
+    }
+    i = i + 2;
+  }
+}
