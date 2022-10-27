@@ -4,7 +4,7 @@
 #include "codegen.h"
 #include "node.h"
 #include "operator.h"
-#include "emitter_ws.h"
+#include "emitter.h"
 
 struct codegen_t {
   node_t    *root;
@@ -28,17 +28,16 @@ static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
 
-codegen_t *codegen_new(node_t *root) {
+codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen_t *codegen = (codegen_t *)malloc(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
   codegen->cur_label_tail = -1;
-  codegen->emitter = emitter_ws_new('S', 'T', 'L');
+  codegen->emitter = emitter;
   return codegen;
 }
 
 void codegen_release(codegen_t **pcodegen) {
-  emitter_release(&(*pcodegen)->emitter);
   free(*pcodegen);
   *pcodegen = NULL;
 }
