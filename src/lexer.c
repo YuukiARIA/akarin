@@ -183,6 +183,9 @@ void lexer_lex_symbol(lexer_t *lexer) {
   else if (strcmp(lexer->text, "array") == 0) {
     lexer->ttype = TT_KW_ARRAY;
   }
+  else if (strcmp(lexer->text, "halt") == 0) {
+    lexer->ttype = TT_KW_HALT;
+  }
   else {
     lexer->ttype = TT_SYMBOL;
   }

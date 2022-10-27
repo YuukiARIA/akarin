@@ -41,6 +41,7 @@ typedef enum {
   TT_KW_GETI,
   TT_KW_GETC,
   TT_KW_ARRAY,
+  TT_KW_HALT,
 
   TT_EOF = -1,
 } ttype_t;

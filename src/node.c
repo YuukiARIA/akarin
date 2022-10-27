@@ -129,6 +129,10 @@ node_t *node_new_array_decl(node_t *var, int size) {
   return node;
 }
 
+node_t *node_new_halt(void) {
+  return node_new(NT_HALT);
+}
+
 ntype_t node_get_ntype(node_t *node) {
   return node->ntype;
 }

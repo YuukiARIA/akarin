@@ -18,6 +18,7 @@ typedef enum {
   NT_GETI,
   NT_GETC,
   NT_ARRAY_DECL,
+  NT_HALT,
 } ntype_t;
 
 typedef struct node_t node_t;
@@ -37,6 +38,7 @@ node_t     *node_new_putc(node_t *expr);
 node_t     *node_new_geti(node_t *var);
 node_t     *node_new_getc(node_t *var);
 node_t     *node_new_array_decl(node_t *var, int size);
+node_t     *node_new_halt(void);
 
 void        node_release(node_t **pnode);
 

@@ -27,6 +27,7 @@ static void gen_pop(void);
 static void gen_jmp(int label_id);
 static void gen_jz(int label_id);
 static void gen_jneg(int label_id);
+static void gen_halt(void);
 static void encode_integer(int n);
 static void encode_uint(unsigned int n);
 static void encode_uint_rec(unsigned int n);
@@ -50,7 +51,8 @@ void codegen_release(codegen_t **pcodegen) {
 
 void codegen_generate(codegen_t *codegen) {
   gen(codegen, codegen->root);
-  puts("LLL");
+  gen_halt();
+  putchar('\n');
 }
 
 static void gen(codegen_t *codegen, node_t *node) {
@@ -117,6 +119,9 @@ static void gen(codegen_t *codegen, node_t *node) {
       int size = node_get_value(node);
       allocate(codegen, node_get_name(node_get_l(node)), size);
     }
+    break;
+  case NT_HALT:
+    gen_halt();
     break;
   default:
     break;
@@ -400,6 +405,10 @@ static void gen_jz(int label_id) {
 static void gen_jneg(int label_id) {
   printf("LTT");
   encode_uint((unsigned int)label_id);
+}
+
+static void gen_halt(void) {
+  printf("LLL");
 }
 
 static void encode_integer(int n) {

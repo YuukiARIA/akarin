@@ -19,6 +19,7 @@ static node_t *parse_putc(parser_t *parser);
 static node_t *parse_geti(parser_t *parser);
 static node_t *parse_getc(parser_t *parser);
 static node_t *parse_array_statement(parser_t *parser);
+static node_t *parse_halt_statement(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
 static node_t *parse_or(parser_t *parser);
@@ -118,6 +119,9 @@ static node_t *parse_statement(parser_t *parser) {
     break;
   case TT_KW_ARRAY:
     node = parse_array_statement(parser);
+    break;
+  case TT_KW_HALT:
+    node = parse_halt_statement(parser);
     break;
   default:
     node = parse_expr(parser);
@@ -261,6 +265,11 @@ static node_t *parse_array_statement(parser_t *parser) {
   }
 
   return node_new_array_decl(var, size);
+}
+
+static node_t *parse_halt_statement(parser_t *parser) {
+  lexer_next(parser->lexer);
+  return node_new_halt();
 }
 
 static node_t *parse_expr(parser_t *parser) {
