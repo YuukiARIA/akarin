@@ -1,0 +1,14 @@
+# Calculate square numbers up to n.
+
+{
+  geti n;
+
+  sum = 0;
+
+  while (n > 0) {
+    sum = sum + n * n;
+    n = n - 1;
+  }
+
+  puti sum;
+}
