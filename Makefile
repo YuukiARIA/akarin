@@ -1,4 +1,3 @@
-CC      = gcc
 CFLAGS  = -Wall -O2
 SRCS    = $(wildcard src/*.c)
 HEADERS = $(wildcard src/*.h)
