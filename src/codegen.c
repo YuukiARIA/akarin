@@ -22,8 +22,8 @@ static void gen_break_statement(codegen_t *codegen, node_t *node);
 static void gen_geti_statement(codegen_t *codegen, node_t *node);
 static void gen_getc_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
+static void gen_binary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
-static void gen_arith(codegen_t *codegen, node_t *node);
 static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
@@ -77,12 +77,10 @@ static void gen(codegen_t *codegen, node_t *node) {
     gen_unary(codegen, node);
     break;
   case NT_BINARY:
-    if (node_get_bop(node) == BOP_ASSIGN) {
-      gen_assign(codegen, node);
-    }
-    else {
-      gen_arith(codegen, node);
-    }
+    gen_binary(codegen, node);
+    break;
+  case NT_ASSIGN:
+    gen_assign(codegen, node);
     break;
   case NT_INTEGER:
     emit_push(emitter, node_get_value(node));
@@ -214,36 +212,7 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
   }
 }
 
-static void gen_assign(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
-  node_t *lhs = node_get_l(node);
-  node_t *expr = node_get_r(node);
-
-  switch (node_get_ntype(lhs)) {
-  case NT_VARIABLE:
-    {
-      int var_index = get_var_index(codegen, node_get_name(lhs));
-      emit_push(emitter, var_index);
-    }
-    break;
-  case NT_ARRAY:
-    {
-      int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
-      emit_push(emitter, var_index);
-      gen(codegen, node_get_r(lhs));
-      emit_add(emitter);
-    }
-    break;
-  default:
-    fprintf(stderr, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
-    return;
-  }
-
-  gen(codegen, expr);
-  emit_store(emitter);
-}
-
-static void gen_arith(codegen_t *codegen, node_t *node) {
+static void gen_binary(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
 
   gen(codegen, node_get_l(node));
@@ -385,6 +354,35 @@ static void gen_arith(codegen_t *codegen, node_t *node) {
   default:
     break;
   }
+}
+
+static void gen_assign(codegen_t *codegen, node_t *node) {
+  emitter_t *emitter = codegen->emitter;
+  node_t *lhs = node_get_l(node);
+  node_t *expr = node_get_r(node);
+
+  switch (node_get_ntype(lhs)) {
+  case NT_VARIABLE:
+    {
+      int var_index = get_var_index(codegen, node_get_name(lhs));
+      emit_push(emitter, var_index);
+    }
+    break;
+  case NT_ARRAY:
+    {
+      int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
+      emit_push(emitter, var_index);
+      gen(codegen, node_get_r(lhs));
+      emit_add(emitter);
+    }
+    break;
+  default:
+    fprintf(stderr, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
+    return;
+  }
+
+  gen(codegen, expr);
+  emit_store(emitter);
 }
 
 static int alloc_label_id(codegen_t *codegen) {

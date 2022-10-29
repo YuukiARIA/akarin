@@ -22,7 +22,6 @@ typedef enum {
   BOP_LE,
   BOP_GT,
   BOP_GE,
-  BOP_ASSIGN,
 } binary_op_t;
 
 const char *unary_op_to_string(unary_op_t uop);

@@ -60,6 +60,13 @@ node_t *node_new_binary(binary_op_t bop, node_t *lhs, node_t *rhs) {
   return node;
 }
 
+node_t *node_new_assign(node_t *lhs, node_t *rhs) {
+  node_t *node = node_new(NT_ASSIGN);
+  node->l = lhs;
+  node->r = rhs;
+  return node;
+}
+
 node_t *node_new_integer(int value) {
   node_t *node = node_new(NT_INTEGER);
   node->value = value;

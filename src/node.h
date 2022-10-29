@@ -7,6 +7,7 @@ typedef enum {
   NT_SEQ,
   NT_UNARY,
   NT_BINARY,
+  NT_ASSIGN,
   NT_INTEGER,
   NT_VARIABLE,
   NT_ARRAY,
@@ -27,6 +28,7 @@ node_t     *node_new(ntype_t ntype);
 node_t     *node_new_seq(node_t *first, node_t *second);
 node_t     *node_new_unary(unary_op_t uop, node_t *arg);
 node_t     *node_new_binary(binary_op_t bop, node_t *lhs, node_t *rhs);
+node_t     *node_new_assign(node_t *lhs, node_t *rhs);
 node_t     *node_new_integer(int value);
 node_t     *node_new_variable(const char *name);
 node_t     *node_new_array(node_t *var, node_t *indexer);

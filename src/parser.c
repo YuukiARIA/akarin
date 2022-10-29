@@ -51,7 +51,6 @@ node_t *parser_parse(parser_t *parser) {
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   switch (ttype) {
-  case TT_EQ:       return BOP_ASSIGN;
   case TT_EQEQ:     return BOP_EQ;
   case TT_EXCLA:    return BOP_NEQ;
   case TT_LT:       return BOP_LT;
@@ -286,7 +285,7 @@ static node_t *parse_assign(parser_t *parser) {
   if (lexer_ttype(parser->lexer) == TT_EQ) {
     lexer_next(parser->lexer);
     y = parse_assign(parser);
-    x = node_new_binary(BOP_ASSIGN, x, y);
+    x = node_new_assign(x, y);
   }
   return x;
 }
