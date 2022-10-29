@@ -108,6 +108,29 @@ static void lexer_lex_integer(lexer_t *lexer) {
   lexer->ivalue = atoi(lexer->text);
 }
 
+static int lex_escaped_char(lexer_t *lexer) {
+  int c = lexer_peek(lexer);
+  switch (c) {
+  case 'r':
+    c = '\r';
+    break;
+  case 'n':
+    c = '\n';
+    break;
+  case 't':
+    c = '\t';
+    break;
+  case '\\':
+    c = '\\';
+    break;
+  case '\'':
+    c = '\'';
+    break;
+  }
+  lexer_succ(lexer);
+  return c;
+}
+
 static void lex_char(lexer_t *lexer) {
   int c = 0;
 
@@ -117,24 +140,7 @@ static void lex_char(lexer_t *lexer) {
 
   if (lexer_peek(lexer) == '\\') {
     lexer_succ(lexer);
-    switch (lexer_peek(lexer)) {
-    case 'r':
-      c = '\r';
-      break;
-    case 'n':
-      c = '\n';
-      break;
-    case 't':
-      c = '\t';
-      break;
-    case '\\':
-      c = '\\';
-      break;
-    case '\'':
-      c = '\'';
-      break;
-    }
-    lexer_succ(lexer);
+    c = lex_escaped_char(lexer);
   }
   else if (isprint(lexer_peek(lexer))) {
     c = lexer_peek(lexer);
