@@ -18,6 +18,25 @@ struct lexer_t {
   int     ivalue;
 };
 
+struct keyword_t {
+  const char *keyword;
+  ttype_t     ttype;
+};
+
+static struct keyword_t g_keywords[] = {
+  { "if",    TT_KW_IF    },
+  { "else",  TT_KW_ELSE  },
+  { "while", TT_KW_WHILE },
+  { "break", TT_KW_BREAK },
+  { "puti",  TT_KW_PUTI  },
+  { "putc",  TT_KW_PUTC  },
+  { "geti",  TT_KW_GETI  },
+  { "getc",  TT_KW_GETC  },
+  { "array", TT_KW_ARRAY },
+  { "halt",  TT_KW_HALT  },
+};
+static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
+
 static void clear_buf(lexer_t *lexer) {
   memset(lexer->text, 0, lexer->bufpos);
   lexer->bufpos = 0;
@@ -156,44 +175,22 @@ static void lex_char(lexer_t *lexer) {
 }
 
 void lexer_lex_symbol(lexer_t *lexer) {
+  int i;
+
   clear_buf(lexer);
   while (isalpha(lexer_peek(lexer))) {
     append_char(lexer, lexer_peek(lexer));
     lexer_succ(lexer);
   }
 
-  if (strcmp(lexer->text, "if") == 0) {
-    lexer->ttype = TT_KW_IF;
-  }
-  else if (strcmp(lexer->text, "else") == 0) {
-    lexer->ttype = TT_KW_ELSE;
-  }
-  else if (strcmp(lexer->text, "while") == 0) {
-    lexer->ttype = TT_KW_WHILE;
-  }
-  else if (strcmp(lexer->text, "break") == 0) {
-    lexer->ttype = TT_KW_BREAK;
-  }
-  else if (strcmp(lexer->text, "puti") == 0) {
-    lexer->ttype = TT_KW_PUTI;
-  }
-  else if (strcmp(lexer->text, "putc") == 0) {
-    lexer->ttype = TT_KW_PUTC;
-  }
-  else if (strcmp(lexer->text, "geti") == 0) {
-    lexer->ttype = TT_KW_GETI;
-  }
-  else if (strcmp(lexer->text, "getc") == 0) {
-    lexer->ttype = TT_KW_GETC;
-  }
-  else if (strcmp(lexer->text, "array") == 0) {
-    lexer->ttype = TT_KW_ARRAY;
-  }
-  else if (strcmp(lexer->text, "halt") == 0) {
-    lexer->ttype = TT_KW_HALT;
-  }
-  else {
-    lexer->ttype = TT_SYMBOL;
+  lexer->ttype = TT_SYMBOL;
+
+  for (i = 0; i < g_keyword_count; ++i) {
+    struct keyword_t kw = g_keywords[i];
+    if (strcmp(lexer->text, kw.keyword) == 0) {
+      lexer->ttype = kw.ttype;
+      break;
+    }
   }
 }
 
