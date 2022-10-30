@@ -10,6 +10,14 @@ void emit_push(emitter_t *emitter, int value) {
   emitter->push(emitter, value);
 }
 
+void emit_copy(emitter_t *emitter, int n) {
+  emitter->copy(emitter, n);
+}
+
+void emit_slide(emitter_t *emitter, int n) {
+  emitter->slide(emitter, n);
+}
+
 void emit_pop(emitter_t *emitter) {
   emitter->pop(emitter);
 }
@@ -66,6 +74,10 @@ void emit_label(emitter_t *emitter, int label) {
   emitter->label(emitter, label);
 }
 
+void emit_call(emitter_t *emitter, int label) {
+  emitter->call(emitter, label);
+}
+
 void emit_jmp(emitter_t *emitter, int label) {
   emitter->jmp(emitter, label);
 }
@@ -76,6 +88,10 @@ void emit_jz(emitter_t *emitter, int label) {
 
 void emit_jneg(emitter_t *emitter, int label) {
   emitter->jneg(emitter, label);
+}
+
+void emit_ret(emitter_t *emitter) {
+  emitter->ret(emitter);
 }
 
 void emit_halt(emitter_t *emitter) {

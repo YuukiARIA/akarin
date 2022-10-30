@@ -8,6 +8,8 @@ typedef struct {
 } emitter_pseudo_t;
 
 static void pseudo_push(emitter_t *self, int value);
+static void pseudo_copy(emitter_t *self, int n);
+static void pseudo_slide(emitter_t *self, int n);
 static void pseudo_pop(emitter_t *self);
 static void pseudo_swap(emitter_t *self);
 static void pseudo_add(emitter_t *self);
@@ -22,9 +24,11 @@ static void pseudo_puti(emitter_t *self);
 static void pseudo_getc(emitter_t *self);
 static void pseudo_geti(emitter_t *self);
 static void pseudo_label(emitter_t *self, int label);
+static void pseudo_call(emitter_t *self, int label);
 static void pseudo_jmp(emitter_t *self, int label);
 static void pseudo_jz(emitter_t *self, int label);
 static void pseudo_jneg(emitter_t *self, int label);
+static void pseudo_ret(emitter_t *self);
 static void pseudo_halt(emitter_t *self);
 static void pseudo_end(emitter_t *self);
 
@@ -44,6 +48,16 @@ emitter_t *emitter_pseudo_new(int indent) {
 static void pseudo_push(emitter_t *self, int value) {
   indent(self);
   printf("PUSH %d\n", value);
+}
+
+static void pseudo_copy(emitter_t *self, int n) {
+  indent(self);
+  printf("COPY %d\n", n);
+}
+
+static void pseudo_slide(emitter_t *self, int n) {
+  indent(self);
+  printf("SLIDE %d\n", n);
 }
 
 static void pseudo_pop(emitter_t *self) {
@@ -102,6 +116,11 @@ static void pseudo_label(emitter_t *self, int label) {
   printf("L%d:\n", label);
 }
 
+static void pseudo_call(emitter_t *self, int label) {
+  indent(self);
+  printf("CALL L%d\n", label);
+}
+
 static void pseudo_jmp(emitter_t *self, int label) {
   indent(self);
   printf("JMP L%d\n", label);
@@ -115,6 +134,10 @@ static void pseudo_jz(emitter_t *self, int label) {
 static void pseudo_jneg(emitter_t *self, int label) {
   indent(self);
   printf("JNEG L%d\n", label);
+}
+
+static void pseudo_ret(emitter_t *self) {
+  indent_puts(self, "RET");
 }
 
 static void pseudo_halt(emitter_t *self) {

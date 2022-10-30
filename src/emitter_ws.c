@@ -10,6 +10,8 @@ typedef struct {
 } emitter_ws_t;
 
 static void ws_push(emitter_t *self, int value);
+static void ws_copy(emitter_t *self, int n);
+static void ws_slide(emitter_t *self, int n);
 static void ws_pop(emitter_t *self);
 static void ws_swap(emitter_t *self);
 static void ws_add(emitter_t *self);
@@ -24,9 +26,11 @@ static void ws_puti(emitter_t *self);
 static void ws_getc(emitter_t *self);
 static void ws_geti(emitter_t *self);
 static void ws_label(emitter_t *self, int label_id);
+static void ws_call(emitter_t *self, int label_id);
 static void ws_jmp(emitter_t *self, int label_id);
 static void ws_jz(emitter_t *self, int label_id);
 static void ws_jneg(emitter_t *self, int label_id);
+static void ws_ret(emitter_t *self);
 static void ws_halt(emitter_t *self);
 static void ws_end(emitter_t *self);
 
@@ -51,6 +55,16 @@ emitter_t *emitter_ws_new(char space, char tab, char newline) {
 static void ws_push(emitter_t *self, int value) {
   emit_chars(self, "SS");
   encode_integer(self, value);
+}
+
+static void ws_copy(emitter_t *self, int n) {
+  emit_chars(self, "STS");
+  encode_integer(self, n);
+}
+
+static void ws_slide(emitter_t *self, int n) {
+  emit_chars(self, "STL");
+  encode_integer(self, n);
 }
 
 static void ws_pop(emitter_t *self) {
@@ -110,6 +124,11 @@ static void ws_label(emitter_t *self, int label_id) {
   encode_uint(self, (unsigned int)label_id);
 }
 
+static void ws_call(emitter_t *self, int label_id) {
+  emit_chars(self, "LST");
+  encode_uint(self, (unsigned int)label_id);
+}
+
 static void ws_jmp(emitter_t *self, int label_id) {
   emit_chars(self, "LSL");
   encode_uint(self, (unsigned int)label_id);
@@ -123,6 +142,10 @@ static void ws_jz(emitter_t *self, int label_id) {
 static void ws_jneg(emitter_t *self, int label_id) {
   emit_chars(self, "LTT");
   encode_uint(self, (unsigned int)label_id);
+}
+
+static void ws_ret(emitter_t *self) {
+  emit_chars(self, "LTL");
 }
 
 static void ws_halt(emitter_t *self) {
