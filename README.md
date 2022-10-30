@@ -11,9 +11,9 @@ Akarin is a transpiler from C-like procedural language to Whitespace.
 make
 sudo make install # ofcourse, you can use ./bin/akarin instead without installation
 
-akarin -i samples/00_basic.txt
-akarin -i samples/00_basic.txt -s
-akarin -i samples/00_basic.txt -p
+akarin samples/00_basic.txt
+akarin samples/00_basic.txt -s
+akarin samples/00_basic.txt -p
 ```
 
 ### Input by stdin

@@ -14,9 +14,10 @@ typedef enum {
 
 static void show_help(void) {
   printf("\e[1mAkarin\e[0m - A Whitespace Transpiler\n\n");
+  printf("Usage: akarin [options] [input file]\n\n");
+  printf("Read from standard input if no input file was given.\n\n");
   printf("Options:\n");
   printf("    -h              Show this help.\n");
-  printf("    -i <input>      Read from file <input> instead of stdin.\n");
   printf("    -s              Transpile into symbolic (S, T, L) code instead of whitespace.\n");
   printf("    -p              Transpile into pseudo mnemonic code instead of whitespace.\n");
 }
@@ -37,17 +38,15 @@ int main(int argc, char *argv[]) {
       show_help();
       return 0;
     }
-    else if (strcmp(argv[i], "-i") == 0) {
-      if (++i < argc) {
-        input = fopen(argv[i], "r");
-        needs_close = 1;
-      }
-    }
     else if (strcmp(argv[i], "-s") == 0) {
       emit_mode = EMIT_SYMBOLIC;
     }
     else if (strcmp(argv[i], "-p") == 0) {
       emit_mode = EMIT_PSEUDO_CODE;
+    }
+    else {
+      input = fopen(argv[i], "r");
+      needs_close = 1;
     }
   }
 
