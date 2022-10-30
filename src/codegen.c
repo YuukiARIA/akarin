@@ -126,18 +126,27 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
   node_t *cond = node_get_cond(node);
   node_t *then = node_get_l(node);
   node_t *els = node_get_r(node);
-  int l1 = alloc_label_id(codegen);
-  int l2 = alloc_label_id(codegen);
 
-  gen(codegen, cond);
-  emit_jz(emitter, l1);
-  gen(codegen, then);
-  emit_jmp(emitter, l2);
-  emit_label(emitter, l1);
   if (els) {
+    int l1 = alloc_label_id(codegen);
+    int l2 = alloc_label_id(codegen);
+
+    gen(codegen, cond);
+    emit_jz(emitter, l1);
+    gen(codegen, then);
+    emit_jmp(emitter, l2);
+    emit_label(emitter, l1);
     gen(codegen, els);
+    emit_label(emitter, l2);
   }
-  emit_label(emitter, l2);
+  else {
+    int l = alloc_label_id(codegen);
+
+    gen(codegen, cond);
+    emit_jz(emitter, l);
+    gen(codegen, then);
+    emit_label(emitter, l);
+  }
 }
 
 static void gen_while_statement(codegen_t *codegen, node_t *node) {
