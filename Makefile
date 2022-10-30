@@ -8,7 +8,7 @@ PREFIX  = /usr/local/bin
 
 $(TARGET): $(OBJS)
 	@mkdir -p bin
-	$(CC) $(OBJS) -o $(TARGET)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
 obj/%.o: src/%.c
 	@mkdir -p obj deps
