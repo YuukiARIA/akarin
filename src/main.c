@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(argv[i], "-i") == 0) {
       if (++i < argc) {
-	input = fopen(argv[i], "r");
-	needs_close = 1;
+        input = fopen(argv[i], "r");
+        needs_close = 1;
       }
     }
     else if (strcmp(argv[i], "-s") == 0) {
