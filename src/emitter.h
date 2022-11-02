@@ -6,6 +6,7 @@ struct emitter_t {
   void (*push)(emitter_t *self, int value);
   void (*copy)(emitter_t *self, int n);
   void (*slide)(emitter_t *self, int n);
+  void (*dup)(emitter_t *self);
   void (*pop)(emitter_t *self);
   void (*swap)(emitter_t *self);
   void (*add)(emitter_t *self);
@@ -34,6 +35,7 @@ void emitter_release(emitter_t **pemitter);
 void emit_push(emitter_t *emitter, int value);
 void emit_copy(emitter_t *emitter, int n);
 void emit_slide(emitter_t *emitter, int n);
+void emit_dup(emitter_t *emitter);
 void emit_pop(emitter_t *emitter);
 void emit_swap(emitter_t *emitter);
 void emit_add(emitter_t *emitter);
@@ -64,6 +66,7 @@ void emit_end(emitter_t *emitter);
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, push ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, copy ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, slide); \
+    EMITTER_OVERRIDE_ONE(OBJ, PREFIX, dup  ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, pop  ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, swap ); \
     EMITTER_OVERRIDE_ONE(OBJ, PREFIX, add  ); \

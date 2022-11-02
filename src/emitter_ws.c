@@ -12,6 +12,7 @@ typedef struct {
 static void ws_push(emitter_t *self, int value);
 static void ws_copy(emitter_t *self, int n);
 static void ws_slide(emitter_t *self, int n);
+static void ws_dup(emitter_t *self);
 static void ws_pop(emitter_t *self);
 static void ws_swap(emitter_t *self);
 static void ws_add(emitter_t *self);
@@ -65,6 +66,10 @@ static void ws_copy(emitter_t *self, int n) {
 static void ws_slide(emitter_t *self, int n) {
   emit_chars(self, "STL");
   encode_integer(self, n);
+}
+
+static void ws_dup(emitter_t *self) {
+  emit_chars(self, "SLS");
 }
 
 static void ws_pop(emitter_t *self) {

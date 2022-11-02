@@ -18,6 +18,10 @@ void emit_slide(emitter_t *emitter, int n) {
   emitter->slide(emitter, n);
 }
 
+void emit_dup(emitter_t *emitter) {
+  emitter->dup(emitter);
+}
+
 void emit_pop(emitter_t *emitter) {
   emitter->pop(emitter);
 }

@@ -10,6 +10,7 @@ typedef struct {
 static void pseudo_push(emitter_t *self, int value);
 static void pseudo_copy(emitter_t *self, int n);
 static void pseudo_slide(emitter_t *self, int n);
+static void pseudo_dup(emitter_t *self);
 static void pseudo_pop(emitter_t *self);
 static void pseudo_swap(emitter_t *self);
 static void pseudo_add(emitter_t *self);
@@ -58,6 +59,10 @@ static void pseudo_copy(emitter_t *self, int n) {
 static void pseudo_slide(emitter_t *self, int n) {
   indent(self);
   printf("SLIDE %d\n", n);
+}
+
+static void pseudo_dup(emitter_t *self) {
+  indent_puts(self, "DUP");
 }
 
 static void pseudo_pop(emitter_t *self) {
