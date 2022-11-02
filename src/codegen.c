@@ -370,6 +370,8 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   node_t *lhs = node_get_l(node);
   node_t *expr = node_get_r(node);
 
+  gen(codegen, expr);
+
   switch (node_get_ntype(lhs)) {
   case NT_VARIABLE:
     {
@@ -390,7 +392,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     return;
   }
 
-  gen(codegen, expr);
+  emit_copy(emitter, 1);
   emit_store(emitter);
 }
 
