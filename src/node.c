@@ -38,6 +38,10 @@ void node_release(node_t **pnode) {
   *pnode = NULL;
 }
 
+node_t *node_new_empty(void) {
+  return node_new(NT_EMPTY);
+}
+
 node_t *node_new_seq(node_t *first, node_t *second) {
   node_t *node = node_new(NT_SEQ);
   node->l = first;

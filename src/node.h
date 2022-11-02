@@ -4,6 +4,7 @@
 
 typedef enum {
   NT_INVALID,
+  NT_EMPTY,
   NT_SEQ,
   NT_EXPR,
   NT_UNARY,
@@ -26,6 +27,7 @@ typedef enum {
 typedef struct node_t node_t;
 
 node_t     *node_new(ntype_t ntype);
+node_t     *node_new_empty(void);
 node_t     *node_new_seq(node_t *first, node_t *second);
 node_t     *node_new_expr(node_t *expr);
 node_t     *node_new_unary(unary_op_t uop, node_t *arg);

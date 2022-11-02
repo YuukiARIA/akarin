@@ -69,7 +69,7 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype) {
 }
 
 static node_t *parse_block(parser_t *parser) {
-  node_t *root = NULL, *node = NULL;
+  node_t *root = node_new_empty(), *node = NULL;
 
   if (lexer_ttype(parser->lexer) == TT_LBRACE) {
     lexer_next(parser->lexer);
@@ -77,12 +77,7 @@ static node_t *parse_block(parser_t *parser) {
 
   while (lexer_ttype(parser->lexer) != TT_RBRACE) {
     node = parse_statement(parser);
-    if (!root) {
-      root = node;
-    }
-    else {
-      root = node_new_seq(root, node);
-    }
+    root = node_new_seq(root, node);
   }
 
   if (lexer_ttype(parser->lexer) == TT_RBRACE) {
