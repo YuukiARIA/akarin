@@ -45,6 +45,12 @@ node_t *node_new_seq(node_t *first, node_t *second) {
   return node;
 }
 
+node_t *node_new_expr(node_t *expr) {
+  node_t *node = node_new(NT_EXPR);
+  node->l = expr;
+  return node;
+}
+
 node_t *node_new_unary(unary_op_t uop, node_t *arg) {
   node_t *node = node_new(NT_UNARY);
   node->uop = uop;

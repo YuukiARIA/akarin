@@ -123,7 +123,7 @@ static node_t *parse_statement(parser_t *parser) {
     node = parse_halt_statement(parser);
     break;
   default:
-    node = parse_expr(parser);
+    node = node_new_expr(parse_expr(parser));
     break;
   }
 

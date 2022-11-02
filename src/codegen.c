@@ -16,6 +16,7 @@ struct codegen_t {
 };
 
 static void gen(codegen_t *codegen, node_t *node);
+static void gen_expr_statement(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
@@ -55,6 +56,9 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_SEQ:
     gen(codegen, node_get_l(node));
     gen(codegen, node_get_r(node));
+    break;
+  case NT_EXPR:
+    gen_expr_statement(codegen, node_get_l(node));
     break;
   case NT_IF:
     gen_if_statement(codegen, node);
@@ -119,6 +123,11 @@ static void gen(codegen_t *codegen, node_t *node) {
   default:
     break;
   }
+}
+
+static void gen_expr_statement(codegen_t *codegen, node_t *node) {
+  gen(codegen, node);
+  emit_pop(codegen->emitter);
 }
 
 static void gen_if_statement(codegen_t *codegen, node_t *node) {
