@@ -16,15 +16,21 @@ struct codegen_t {
 };
 
 static void gen(codegen_t *codegen, node_t *node);
+static void gen_sequence(codegen_t *codegen, node_t *node);
 static void gen_expr_statement(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
-static void gen_geti_statement(codegen_t *codegen, node_t *node);
+static void gen_putc_statement(codegen_t *codegen, node_t *node);
+static void gen_puti_statement(codegen_t *codegen, node_t *node);
 static void gen_getc_statement(codegen_t *codegen, node_t *node);
+static void gen_geti_statement(codegen_t *codegen, node_t *node);
+static void gen_array_decl_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_binary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
+static void gen_variable(codegen_t *codegen, node_t *node);
+static void gen_array(codegen_t *codegen, node_t *node);
 static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
@@ -54,8 +60,7 @@ static void gen(codegen_t *codegen, node_t *node) {
 
   switch (node_get_ntype(node)) {
   case NT_SEQ:
-    gen(codegen, node_get_l(node));
-    gen(codegen, node_get_r(node));
+    gen_sequence(codegen, node);
     break;
   case NT_EXPR:
     gen_expr_statement(codegen, node_get_l(node));
@@ -69,13 +74,20 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_BREAK:
     gen_break_statement(codegen, node);
     break;
-  case NT_PUTI:
-    gen(codegen, node_get_l(node));
-    emit_puti(emitter);
+  case NT_GETC:
+    gen_getc_statement(codegen, node);
+    break;
+  case NT_GETI:
+    gen_geti_statement(codegen, node);
     break;
   case NT_PUTC:
-    gen(codegen, node_get_l(node));
-    emit_putc(emitter);
+    gen_putc_statement(codegen, node);
+    break;
+  case NT_PUTI:
+    gen_puti_statement(codegen, node);
+    break;
+  case NT_ARRAY_DECL:
+    gen_array_decl_statement(codegen, node);
     break;
   case NT_UNARY:
     gen_unary(codegen, node);
@@ -90,32 +102,10 @@ static void gen(codegen_t *codegen, node_t *node) {
     emit_push(emitter, node_get_value(node));
     break;
   case NT_VARIABLE:
-    {
-      int var_index = get_var_index(codegen, node_get_name(node));
-      emit_push(emitter, var_index);
-      emit_load(emitter);
-    }
+    gen_variable(codegen, node);
     break;
   case NT_ARRAY:
-    {
-      int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
-      emit_push(emitter, var_index);
-      gen(codegen, node_get_r(node));
-      emit_add(emitter);
-      emit_load(emitter);
-    }
-    break;
-  case NT_GETI:
-    gen_geti_statement(codegen, node);
-    break;
-  case NT_GETC:
-    gen_getc_statement(codegen, node);
-    break;
-  case NT_ARRAY_DECL:
-    {
-      int size = node_get_value(node);
-      allocate(codegen, node_get_name(node_get_l(node)), size);
-    }
+    gen_array(codegen, node);
     break;
   case NT_HALT:
     emit_halt(emitter);
@@ -123,6 +113,11 @@ static void gen(codegen_t *codegen, node_t *node) {
   default:
     break;
   }
+}
+
+static void gen_sequence(codegen_t *codegen, node_t *node) {
+  gen(codegen, node_get_l(node));
+  gen(codegen, node_get_r(node));
 }
 
 static void gen_expr_statement(codegen_t *codegen, node_t *node) {
@@ -187,12 +182,14 @@ static void gen_break_statement(codegen_t *codegen, node_t *node) {
   emit_jmp(codegen->emitter, label);
 }
 
-static void gen_geti_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
-  node_t *var = node_get_l(node);
-  int var_index = get_var_index(codegen, node_get_name(var));
-  emit_push(emitter, var_index);
-  emit_geti(emitter);
+static void gen_putc_statement(codegen_t *codegen, node_t *node) {
+  gen(codegen, node_get_l(node));
+  emit_putc(codegen->emitter);
+}
+
+static void gen_puti_statement(codegen_t *codegen, node_t *node) {
+  gen(codegen, node_get_l(node));
+  emit_puti(codegen->emitter);
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
@@ -201,6 +198,19 @@ static void gen_getc_statement(codegen_t *codegen, node_t *node) {
   int var_index = get_var_index(codegen, node_get_name(var));
   emit_push(emitter, var_index);
   emit_getc(emitter);
+}
+
+static void gen_geti_statement(codegen_t *codegen, node_t *node) {
+  emitter_t *emitter = codegen->emitter;
+  node_t *var = node_get_l(node);
+  int var_index = get_var_index(codegen, node_get_name(var));
+  emit_push(emitter, var_index);
+  emit_geti(emitter);
+}
+
+static void gen_array_decl_statement(codegen_t *codegen, node_t *node) {
+  int size = node_get_value(node);
+  allocate(codegen, node_get_name(node_get_l(node)), size);
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
@@ -403,6 +413,24 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 
   emit_copy(emitter, 1);
   emit_store(emitter);
+}
+
+static void gen_variable(codegen_t *codegen, node_t *node) {
+  emitter_t *emitter = codegen->emitter;
+  int var_index = get_var_index(codegen, node_get_name(node));
+
+  emit_push(emitter, var_index);
+  emit_load(emitter);
+}
+
+static void gen_array(codegen_t *codegen, node_t *node) {
+  emitter_t *emitter = codegen->emitter;
+  int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
+
+  emit_push(emitter, var_index);
+  gen(codegen, node_get_r(node));
+  emit_add(emitter);
+  emit_load(emitter);
 }
 
 static int alloc_label_id(codegen_t *codegen) {
