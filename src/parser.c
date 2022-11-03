@@ -23,6 +23,7 @@ static node_t *parse_geti(parser_t *parser);
 static node_t *parse_getc(parser_t *parser);
 static node_t *parse_array_statement(parser_t *parser);
 static node_t *parse_halt_statement(parser_t *parser);
+static node_t *parse_expr_statement(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
 static node_t *parse_or(parser_t *parser);
@@ -78,6 +79,23 @@ static int is_ttype(parser_t *parser, ttype_t ttype) {
   return lexer_ttype(parser->lexer) == ttype;
 }
 
+static int expect(parser_t *parser, ttype_t ttype) {
+  location_t location;
+
+  if (is_ttype(parser, ttype)) {
+    lexer_next(parser->lexer);
+    return 1;
+  }
+
+  location = lexer_get_location(parser->lexer);
+  fprintf(stderr, "error: unexpected %s, but expected %s. (line:%d,column:%d)\n",
+          ttype_to_string(lexer_ttype(parser->lexer)),
+          ttype_to_string(ttype),
+          location.line,
+          location.column);
+  return 0;
+}
+
 static node_t *parse_program(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
   while (!is_eof(parser)) {
@@ -90,25 +108,17 @@ static node_t *parse_program(parser_t *parser) {
 static node_t *parse_block(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
 
-  if (is_ttype(parser, TT_LBRACE)) {
-    lexer_next(parser->lexer);
-  }
-
+  expect(parser, TT_LBRACE);
   while (!is_eof(parser) && !is_ttype(parser, TT_RBRACE)) {
     node = parse_statement(parser);
     root = node_new_seq(root, node);
   }
-
-  if (is_ttype(parser, TT_RBRACE)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_RBRACE);
 
   return root;
 }
 
 static node_t *parse_statement(parser_t *parser) {
-  node_t *node = NULL;
-
   switch (lexer_ttype(parser->lexer)) {
   case TT_LBRACE:
     return parse_block(parser);
@@ -119,55 +129,33 @@ static node_t *parse_statement(parser_t *parser) {
   case TT_KW_BREAK:
     return parse_break_statement(parser);
   case TT_KW_PUTI:
-    node = parse_puti(parser);
-    break;
+    return parse_puti(parser);
   case TT_KW_PUTC:
-    node = parse_putc(parser);
-    break;
+    return parse_putc(parser);
   case TT_KW_GETI:
-    node = parse_geti(parser);
-    break;
+    return parse_geti(parser);
   case TT_KW_GETC:
-    node = parse_getc(parser);
-    break;
+    return parse_getc(parser);
   case TT_KW_ARRAY:
-    node = parse_array_statement(parser);
-    break;
+    return parse_array_statement(parser);
   case TT_KW_HALT:
-    node = parse_halt_statement(parser);
-    break;
+    return parse_halt_statement(parser);
   default:
-    node = node_new_expr(parse_expr(parser));
-    break;
+    return parse_expr_statement(parser);
   }
-
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
-
-  return node;
 }
 
 static node_t *parse_if_statement(parser_t *parser) {
   node_t *cond = NULL, *then = NULL, *els = NULL;
 
-  if (is_ttype(parser, TT_KW_IF)) {
-    lexer_next(parser->lexer);
-    if (is_ttype(parser, TT_LPAREN)) {
-      lexer_next(parser->lexer);
+  expect(parser, TT_KW_IF);
+  expect(parser, TT_LPAREN);
+  cond = parse_expr(parser);
+  expect(parser, TT_RPAREN);
+  then = parse_statement(parser);
 
-      cond = parse_expr(parser);
-
-      if (is_ttype(parser, TT_RPAREN)) {
-        lexer_next(parser->lexer);
-      }
-
-      then = parse_statement(parser);
-    }
-  }
   if (is_ttype(parser, TT_KW_ELSE)) {
     lexer_next(parser->lexer);
-
     els = parse_statement(parser);
   }
 
@@ -177,52 +165,34 @@ static node_t *parse_if_statement(parser_t *parser) {
 static node_t *parse_while_statement(parser_t *parser) {
   node_t *cond = NULL, *body = NULL;
 
-  if (is_ttype(parser, TT_KW_WHILE)) {
-    lexer_next(parser->lexer);
-
-    if (is_ttype(parser, TT_LPAREN)) {
-      lexer_next(parser->lexer);
-
-      cond = parse_expr(parser);
-
-      if (is_ttype(parser, TT_RPAREN)) {
-        lexer_next(parser->lexer);
-      }
-
-      body = parse_statement(parser);
-    }
-  }
+  expect(parser, TT_KW_WHILE);
+  expect(parser, TT_LPAREN);
+  cond = parse_expr(parser);
+  expect(parser, TT_RPAREN);
+  body = parse_statement(parser);
 
   return node_new_while(cond, body);
 }
 
 static node_t *parse_break_statement(parser_t *parser) {
-  if (is_ttype(parser, TT_KW_BREAK)) {
-    lexer_next(parser->lexer);
-  }
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_KW_BREAK);
+  expect(parser, TT_SEMICOLON);
   return node_new_break();
 }
 
 static node_t *parse_puti(parser_t *parser) {
   node_t *node;
-  lexer_next(parser->lexer);
+  expect(parser, TT_KW_PUTI);
   node = node_new_puti(parse_expr(parser));
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_SEMICOLON);
   return node;
 }
 
 static node_t *parse_putc(parser_t *parser) {
   node_t *node;
-  lexer_next(parser->lexer);
+  expect(parser, TT_KW_PUTC);
   node = node_new_putc(parse_expr(parser));
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_SEMICOLON);
   return node;
 }
 
@@ -231,11 +201,9 @@ static node_t *parse_putc(parser_t *parser) {
  */
 static node_t *parse_geti(parser_t *parser) {
   node_t *node;
-  lexer_next(parser->lexer);
+  expect(parser, TT_KW_GETI);
   node = node_new_geti(parse_variable(parser));
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_SEMICOLON);
   return node;
 }
 
@@ -244,11 +212,9 @@ static node_t *parse_geti(parser_t *parser) {
  */
 static node_t *parse_getc(parser_t *parser) {
   node_t *node;
-  lexer_next(parser->lexer);
+  expect(parser, TT_KW_GETC);
   node = node_new_getc(parse_variable(parser));
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_SEMICOLON);
   return node;
 }
 
@@ -256,41 +222,34 @@ static node_t *parse_array_statement(parser_t *parser) {
   node_t *var;
   int size;
 
-  if (is_ttype(parser, TT_KW_ARRAY)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_KW_ARRAY);
 
   var = parse_variable(parser);
 
-  if (is_ttype(parser, TT_LBRACKET)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_LBRACKET);
 
   size = lexer_int_value(parser->lexer);
   lexer_next(parser->lexer);
 
-  if (is_ttype(parser, TT_RBRACKET)) {
-    lexer_next(parser->lexer);
-  }
-
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_RBRACKET);
+  expect(parser, TT_SEMICOLON);
 
   return node_new_array_decl(var, size);
 }
 
 static node_t *parse_halt_statement(parser_t *parser) {
-  lexer_next(parser->lexer);
+  expect(parser, TT_KW_HALT);
   return node_new_halt();
 }
 
+static node_t *parse_expr_statement(parser_t *parser) {
+  node_t *expr = parse_expr(parser);
+  expect(parser, TT_SEMICOLON);
+  return node_new_expr(expr);
+}
+
 static node_t *parse_expr(parser_t *parser) {
-  node_t *expr = parse_assign(parser);
-  if (is_ttype(parser, TT_SEMICOLON)) {
-    lexer_next(parser->lexer);
-  }
-  return expr;
+  return parse_assign(parser);
 }
 
 static node_t *parse_assign(parser_t *parser) {
@@ -391,14 +350,14 @@ static node_t *parse_atomic(parser_t *parser) {
     return node_new_unary(UOP_NOT, node);
   case TT_SYMBOL:
     node = parse_variable(parser);
-    if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+    if (is_ttype(parser, TT_LBRACKET)) {
       node = node_new_array(node, parse_array_indexer(parser));
     }
     return node;
   case TT_LPAREN:
-    lexer_next(parser->lexer);
+    expect(parser, TT_LPAREN);
     node = parse_expr(parser);
-    lexer_next(parser->lexer);
+    expect(parser, TT_RPAREN);
     return node;
   default:
     break;
@@ -420,12 +379,8 @@ static node_t *parse_variable(parser_t *parser) {
 
 static node_t *parse_array_indexer(parser_t *parser) {
   node_t *indexer = NULL;
-  if (is_ttype(parser, TT_LBRACKET)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_LBRACKET);
   indexer = parse_expr(parser);
-  if (is_ttype(parser, TT_RBRACKET)) {
-    lexer_next(parser->lexer);
-  }
+  expect(parser, TT_RBRACKET);
   return indexer;
 }
