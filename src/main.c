@@ -20,11 +20,13 @@ static void show_help(void) {
   printf("    -h              Show this help.\n");
   printf("    -s              Transpile into symbolic (S, T, L) code instead of whitespace.\n");
   printf("    -p              Transpile into pseudo mnemonic code instead of whitespace.\n");
+  printf("    -d              Dump syntax tree.\n");
 }
 
 int main(int argc, char *argv[]) {
   FILE *input = stdin;
   int needs_close = 0;
+  int dump_tree = 0;
   parser_t *parser;
   node_t *node;
   codegen_t *codegen;
@@ -43,6 +45,9 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(argv[i], "-p") == 0) {
       emit_mode = EMIT_PSEUDO_CODE;
+    }
+    else if (strcmp(argv[i], "-d") == 0) {
+      dump_tree = 1;
     }
     else {
       input = fopen(argv[i], "r");
@@ -77,10 +82,15 @@ int main(int argc, char *argv[]) {
 
   parser_release(&parser);
 
-  codegen = codegen_new(node, emitter);
-  codegen_generate(codegen);
+  if (dump_tree) {
+    node_dump_tree(node);
+  }
+  else {
+    codegen = codegen_new(node, emitter);
+    codegen_generate(codegen);
+    codegen_release(&codegen);
+  }
 
-  codegen_release(&codegen);
   emitter_release(&emitter);
   node_release(&node);
   return 0;
