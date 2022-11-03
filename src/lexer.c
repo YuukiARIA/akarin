@@ -37,6 +37,7 @@ static struct keyword_t g_keywords[] = {
 };
 static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
 
+static int  peek(lexer_t *lexer);
 static void succ(lexer_t *lexer);
 
 static void clear_buf(lexer_t *lexer) {
@@ -83,7 +84,7 @@ const char *lexer_text(lexer_t *lexer) {
   return lexer->text;
 }
 
-int lexer_peek(lexer_t *lexer) {
+static int peek(lexer_t *lexer) {
   return lexer->cur;
 }
 
@@ -102,17 +103,17 @@ static void succ(lexer_t *lexer) {
 }
 
 void skip_to_end_of_line(lexer_t *lexer) {
-  while (!lexer_is_eof(lexer) && lexer_peek(lexer) != '\n') {
+  while (!lexer_is_eof(lexer) && peek(lexer) != '\n') {
     succ(lexer);
   }
 }
 
 void lexer_skip_ws(lexer_t *lexer) {
   while (!lexer_is_eof(lexer)) {
-    if (isspace(lexer_peek(lexer))) {
+    if (isspace(peek(lexer))) {
       succ(lexer);
     }
-    else if (lexer_peek(lexer) == '#') {
+    else if (peek(lexer) == '#') {
       skip_to_end_of_line(lexer);
     }
     else {
@@ -123,8 +124,8 @@ void lexer_skip_ws(lexer_t *lexer) {
 
 static void lexer_lex_integer(lexer_t *lexer) {
   clear_buf(lexer);
-  while (isdigit(lexer_peek(lexer))) {
-    append_char(lexer, lexer_peek(lexer));
+  while (isdigit(peek(lexer))) {
+    append_char(lexer, peek(lexer));
     succ(lexer);
   }
   lexer->ttype = TT_INTEGER;
@@ -132,7 +133,7 @@ static void lexer_lex_integer(lexer_t *lexer) {
 }
 
 static int lex_escaped_char(lexer_t *lexer) {
-  int c = lexer_peek(lexer);
+  int c = peek(lexer);
   switch (c) {
   case 'r':
     c = '\r';
@@ -157,20 +158,20 @@ static int lex_escaped_char(lexer_t *lexer) {
 static void lex_char(lexer_t *lexer) {
   int c = 0;
 
-  if (lexer_peek(lexer) == '\'') {
+  if (peek(lexer) == '\'') {
     succ(lexer);
   }
 
-  if (lexer_peek(lexer) == '\\') {
+  if (peek(lexer) == '\\') {
     succ(lexer);
     c = lex_escaped_char(lexer);
   }
-  else if (isprint(lexer_peek(lexer))) {
-    c = lexer_peek(lexer);
+  else if (isprint(peek(lexer))) {
+    c = peek(lexer);
     succ(lexer);
   }
 
-  if (lexer_peek(lexer) == '\'') {
+  if (peek(lexer) == '\'') {
     succ(lexer);
   }
 
@@ -182,8 +183,8 @@ void lexer_lex_symbol(lexer_t *lexer) {
   int i;
 
   clear_buf(lexer);
-  while (isalpha(lexer_peek(lexer))) {
-    append_char(lexer, lexer_peek(lexer));
+  while (isalpha(peek(lexer))) {
+    append_char(lexer, peek(lexer));
     succ(lexer);
   }
 
@@ -199,14 +200,14 @@ void lexer_lex_symbol(lexer_t *lexer) {
 }
 
 static int lex_op(lexer_t *lexer) {
-  switch (lexer_peek(lexer)) {
+  switch (peek(lexer)) {
   case ';':
     succ(lexer);
     lexer->ttype = TT_SEMICOLON;
     return 1;
   case '=':
     succ(lexer);
-    if (lexer_peek(lexer) == '=') {
+    if (peek(lexer) == '=') {
       succ(lexer);
       lexer->ttype = TT_EQEQ;
       return 1;
@@ -215,7 +216,7 @@ static int lex_op(lexer_t *lexer) {
     return 1;
   case '!':
     succ(lexer);
-    if (lexer_peek(lexer) == '=') {
+    if (peek(lexer) == '=') {
       succ(lexer);
       lexer->ttype = TT_EXCLAEQ;
       return 1;
@@ -252,7 +253,7 @@ static int lex_op(lexer_t *lexer) {
     return 1;
   case '<':
     succ(lexer);
-    if (lexer_peek(lexer) == '=') {
+    if (peek(lexer) == '=') {
       succ(lexer);
       lexer->ttype = TT_LE;
       return 1;
@@ -261,7 +262,7 @@ static int lex_op(lexer_t *lexer) {
     return 1;
   case '>':
     succ(lexer);
-    if (lexer_peek(lexer) == '=') {
+    if (peek(lexer) == '=') {
       succ(lexer);
       lexer->ttype = TT_GE;
       return 1;
@@ -304,7 +305,7 @@ void lexer_next(lexer_t *lexer) {
 
   lexer_skip_ws(lexer);
 
-  c = lexer_peek(lexer);
+  c = peek(lexer);
 
   if (c == EOF) {
     lexer->ttype = TT_EOF;
