@@ -81,7 +81,7 @@ static int is_ttype(parser_t *parser, ttype_t ttype) {
 
 static node_t *parse_program(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
-  while (lexer_ttype(parser->lexer) != TT_EOF) {
+  while (!is_eof(parser)) {
     node = parse_statement(parser);
     root = node_new_seq(root, node);
   }
@@ -91,7 +91,7 @@ static node_t *parse_program(parser_t *parser) {
 static node_t *parse_block(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
 
-  if (lexer_ttype(parser->lexer) == TT_LBRACE) {
+  if (is_ttype(parser, TT_LBRACE)) {
     lexer_next(parser->lexer);
   }
 
@@ -100,7 +100,7 @@ static node_t *parse_block(parser_t *parser) {
     root = node_new_seq(root, node);
   }
 
-  if (lexer_ttype(parser->lexer) == TT_RBRACE) {
+  if (is_ttype(parser, TT_RBRACE)) {
     lexer_next(parser->lexer);
   }
 
@@ -142,7 +142,7 @@ static node_t *parse_statement(parser_t *parser) {
     break;
   }
 
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
 
@@ -152,21 +152,21 @@ static node_t *parse_statement(parser_t *parser) {
 static node_t *parse_if_statement(parser_t *parser) {
   node_t *cond = NULL, *then = NULL, *els = NULL;
 
-  if (lexer_ttype(parser->lexer) == TT_KW_IF) {
+  if (is_ttype(parser, TT_KW_IF)) {
     lexer_next(parser->lexer);
-    if (lexer_ttype(parser->lexer) == TT_LPAREN) {
+    if (is_ttype(parser, TT_LPAREN)) {
       lexer_next(parser->lexer);
 
       cond = parse_expr(parser);
 
-      if (lexer_ttype(parser->lexer) == TT_RPAREN) {
+      if (is_ttype(parser, TT_RPAREN)) {
         lexer_next(parser->lexer);
       }
 
       then = parse_statement(parser);
     }
   }
-  if (lexer_ttype(parser->lexer) == TT_KW_ELSE) {
+  if (is_ttype(parser, TT_KW_ELSE)) {
     lexer_next(parser->lexer);
 
     els = parse_statement(parser);
@@ -178,15 +178,15 @@ static node_t *parse_if_statement(parser_t *parser) {
 static node_t *parse_while_statement(parser_t *parser) {
   node_t *cond = NULL, *body = NULL;
 
-  if (lexer_ttype(parser->lexer) == TT_KW_WHILE) {
+  if (is_ttype(parser, TT_KW_WHILE)) {
     lexer_next(parser->lexer);
 
-    if (lexer_ttype(parser->lexer) == TT_LPAREN) {
+    if (is_ttype(parser, TT_LPAREN)) {
       lexer_next(parser->lexer);
 
       cond = parse_expr(parser);
 
-      if (lexer_ttype(parser->lexer) == TT_RPAREN) {
+      if (is_ttype(parser, TT_RPAREN)) {
         lexer_next(parser->lexer);
       }
 
@@ -198,10 +198,10 @@ static node_t *parse_while_statement(parser_t *parser) {
 }
 
 static node_t *parse_break_statement(parser_t *parser) {
-  if (lexer_ttype(parser->lexer) == TT_KW_BREAK) {
+  if (is_ttype(parser, TT_KW_BREAK)) {
     lexer_next(parser->lexer);
   }
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return node_new_break();
@@ -211,7 +211,7 @@ static node_t *parse_puti(parser_t *parser) {
   node_t *node;
   lexer_next(parser->lexer);
   node = node_new_puti(parse_expr(parser));
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return node;
@@ -221,7 +221,7 @@ static node_t *parse_putc(parser_t *parser) {
   node_t *node;
   lexer_next(parser->lexer);
   node = node_new_putc(parse_expr(parser));
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return node;
@@ -234,7 +234,7 @@ static node_t *parse_geti(parser_t *parser) {
   node_t *node;
   lexer_next(parser->lexer);
   node = node_new_geti(parse_variable(parser));
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return node;
@@ -247,7 +247,7 @@ static node_t *parse_getc(parser_t *parser) {
   node_t *node;
   lexer_next(parser->lexer);
   node = node_new_getc(parse_variable(parser));
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return node;
@@ -257,24 +257,24 @@ static node_t *parse_array_statement(parser_t *parser) {
   node_t *var;
   int size;
 
-  if (lexer_ttype(parser->lexer) == TT_KW_ARRAY) {
+  if (is_ttype(parser, TT_KW_ARRAY)) {
     lexer_next(parser->lexer);
   }
 
   var = parse_variable(parser);
 
-  if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+  if (is_ttype(parser, TT_LBRACKET)) {
     lexer_next(parser->lexer);
   }
 
   size = lexer_int_value(parser->lexer);
   lexer_next(parser->lexer);
 
-  if (lexer_ttype(parser->lexer) == TT_RBRACKET) {
+  if (is_ttype(parser, TT_RBRACKET)) {
     lexer_next(parser->lexer);
   }
 
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
 
@@ -288,7 +288,7 @@ static node_t *parse_halt_statement(parser_t *parser) {
 
 static node_t *parse_expr(parser_t *parser) {
   node_t *expr = parse_assign(parser);
-  if (lexer_ttype(parser->lexer) == TT_SEMICOLON) {
+  if (is_ttype(parser, TT_SEMICOLON)) {
     lexer_next(parser->lexer);
   }
   return expr;
@@ -297,7 +297,7 @@ static node_t *parse_expr(parser_t *parser) {
 static node_t *parse_assign(parser_t *parser) {
   node_t *x, *y;
   x = parse_or(parser);
-  if (lexer_ttype(parser->lexer) == TT_EQ) {
+  if (is_ttype(parser, TT_EQ)) {
     lexer_next(parser->lexer);
     y = parse_assign(parser);
     x = node_new_assign(x, y);
@@ -308,7 +308,7 @@ static node_t *parse_assign(parser_t *parser) {
 static node_t *parse_or(parser_t *parser) {
   node_t *x, *y;
   x = parse_and(parser);
-  while (lexer_ttype(parser->lexer) == TT_BAR) {
+  while (is_ttype(parser, TT_BAR)) {
     lexer_next(parser->lexer);
     y = parse_and(parser);
     x = node_new_binary(BOP_OR, x, y);
@@ -319,7 +319,7 @@ static node_t *parse_or(parser_t *parser) {
 static node_t *parse_and(parser_t *parser) {
   node_t *x, *y;
   x = parse_comparison(parser);
-  while (lexer_ttype(parser->lexer) == TT_AMP) {
+  while (is_ttype(parser, TT_AMP)) {
     lexer_next(parser->lexer);
     y = parse_comparison(parser);
     x = node_new_binary(BOP_AND, x, y);
@@ -330,12 +330,12 @@ static node_t *parse_and(parser_t *parser) {
 static node_t *parse_comparison(parser_t *parser) {
   node_t *x, *y;
   x = parse_addsub(parser);
-  while (lexer_ttype(parser->lexer) == TT_EQEQ ||
-         lexer_ttype(parser->lexer) == TT_EXCLAEQ ||
-         lexer_ttype(parser->lexer) == TT_LT ||
-         lexer_ttype(parser->lexer) == TT_LE ||
-         lexer_ttype(parser->lexer) == TT_GT ||
-         lexer_ttype(parser->lexer) == TT_GE) {
+  while (is_ttype(parser, TT_EQEQ) ||
+         is_ttype(parser, TT_EXCLAEQ) ||
+         is_ttype(parser, TT_LT) ||
+         is_ttype(parser, TT_LE) ||
+         is_ttype(parser, TT_GT) ||
+         is_ttype(parser, TT_GE)) {
     binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
     lexer_next(parser->lexer);
     y = parse_addsub(parser);
@@ -347,7 +347,7 @@ static node_t *parse_comparison(parser_t *parser) {
 static node_t *parse_addsub(parser_t *parser) {
   node_t *x, *y;
   x = parse_muldiv(parser);
-  while (lexer_ttype(parser->lexer) == TT_PLUS || lexer_ttype(parser->lexer) == TT_MINUS) {
+  while (is_ttype(parser, TT_PLUS) || is_ttype(parser, TT_MINUS)) {
     binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
     lexer_next(parser->lexer);
     y = parse_muldiv(parser);
@@ -359,7 +359,7 @@ static node_t *parse_addsub(parser_t *parser) {
 static node_t *parse_muldiv(parser_t *parser) {
   node_t *x, *y;
   x = parse_atomic(parser);
-  while (lexer_ttype(parser->lexer) == TT_ASTERISK || lexer_ttype(parser->lexer) == TT_SLASH || lexer_ttype(parser->lexer) == TT_PERCENT) {
+  while (is_ttype(parser, TT_ASTERISK) || is_ttype(parser, TT_SLASH) || is_ttype(parser, TT_PERCENT)) {
     binary_op_t bop = ttype_to_binary_op(lexer_ttype(parser->lexer));
     lexer_next(parser->lexer);
     y = parse_atomic(parser);
@@ -412,7 +412,7 @@ static node_t *parse_atomic(parser_t *parser) {
 
 static node_t *parse_variable(parser_t *parser) {
   node_t *node = NULL;
-  if (lexer_ttype(parser->lexer) == TT_SYMBOL) {
+  if (is_ttype(parser, TT_SYMBOL)) {
     node = node_new_variable(lexer_text(parser->lexer));
     lexer_next(parser->lexer);
   }
@@ -421,11 +421,11 @@ static node_t *parse_variable(parser_t *parser) {
 
 static node_t *parse_array_indexer(parser_t *parser) {
   node_t *indexer = NULL;
-  if (lexer_ttype(parser->lexer) == TT_LBRACKET) {
+  if (is_ttype(parser, TT_LBRACKET)) {
     lexer_next(parser->lexer);
   }
   indexer = parse_expr(parser);
-  if (lexer_ttype(parser->lexer) == TT_RBRACKET) {
+  if (is_ttype(parser, TT_RBRACKET)) {
     lexer_next(parser->lexer);
   }
   return indexer;
