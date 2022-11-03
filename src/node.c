@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "node.h"
@@ -180,4 +181,115 @@ node_t *node_get_r(node_t *node) {
 
 node_t *node_get_cond(node_t *node) {
   return node->cond;
+}
+
+static void print_indent(int indent) {
+  int i;
+  for (i = 0; i < indent - 1; ++i) {
+    putchar('|');
+    putchar(' ');
+  }
+  putchar('+');
+  putchar('-');
+}
+
+static void puts_indent(int indent, const char *s) {
+  print_indent(indent);
+  puts(s);
+}
+
+static void dump_rec(node_t *node, int indent) {
+  switch (node->ntype) {
+  case NT_INVALID:
+    puts_indent(indent, "Invalid");
+    break;
+  case NT_EMPTY:
+    break;
+  case NT_SEQ:
+    dump_rec(node->l, indent);
+    dump_rec(node->r, indent);
+    break;
+  case NT_EXPR:
+    puts_indent(indent, "Expr");
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_UNARY:
+    print_indent(indent);
+    printf("Unary %s\n", unary_op_to_string(node->uop));
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_BINARY:
+    print_indent(indent);
+    printf("Binary %s\n", binary_op_to_string(node->bop));
+    dump_rec(node->l, indent + 1);
+    dump_rec(node->r, indent + 1);
+    break;
+  case NT_ASSIGN:
+    puts_indent(indent, "Assign");
+    dump_rec(node->l, indent + 1);
+    dump_rec(node->r, indent + 1);
+  case NT_INTEGER:
+    print_indent(indent);
+    printf("Integer %d\n", node->value);
+    break;
+  case NT_VARIABLE:
+    print_indent(indent);
+    printf("Variable %s\n", node->name);
+    break;
+  case NT_ARRAY:
+    puts_indent(indent, "Array");
+    dump_rec(node->l, indent + 1);
+    dump_rec(node->r, indent + 1);
+    break;
+  case NT_IF:
+    puts_indent(indent, "If-Statement");
+    puts_indent(indent + 1, "Condition");
+    dump_rec(node->cond, indent + 2);
+    puts_indent(indent + 1, "Then-Clause");
+    dump_rec(node->l, indent + 2);
+    if (node->r) {
+      puts_indent(indent + 1, "Else-Clause");
+      dump_rec(node->r, indent + 2);
+    }
+    break;
+  case NT_WHILE:
+    puts_indent(indent, "While-Statement");
+    puts_indent(indent + 1, "Condition");
+    dump_rec(node->cond, indent + 2);
+    puts_indent(indent + 1, "Body");
+    dump_rec(node->l, indent + 2);
+    break;
+  case NT_BREAK:
+    puts_indent(indent, "Break-Statement");
+    break;
+  case NT_PUTI:
+    puts_indent(indent, "Puti-Statement");
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_PUTC:
+    puts_indent(indent, "Putc-Statement");
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_GETI:
+    puts_indent(indent, "Geti-Statement");
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_GETC:
+    puts_indent(indent, "Getc-Statement");
+    dump_rec(node->l, indent + 1);
+    break;
+  case NT_ARRAY_DECL:
+    puts_indent(indent, "ArrayDecl-Statement");
+    dump_rec(node->l, indent + 1);
+    print_indent(indent + 2);
+    printf("Capacity %d\n", node->value);
+    break;
+  case NT_HALT:
+    puts_indent(indent, "Halt-Statement");
+    break;
+  }
+}
+
+void node_dump_tree(node_t *node) {
+  dump_rec(node, 0);
 }
