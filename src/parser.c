@@ -9,6 +9,8 @@ struct parser_t {
 };
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
+static int     is_eof(parser_t *parser);
+static int     is_ttype(parser_t *parser, ttype_t ttype);
 static node_t *parse_program(parser_t *parser);
 static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
@@ -69,6 +71,14 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   }
 }
 
+static int is_eof(parser_t *parser) {
+  return is_ttype(parser, TT_EOF);
+}
+
+static int is_ttype(parser_t *parser, ttype_t ttype) {
+  return lexer_ttype(parser->lexer) == ttype;
+}
+
 static node_t *parse_program(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
   while (lexer_ttype(parser->lexer) != TT_EOF) {
@@ -85,7 +95,7 @@ static node_t *parse_block(parser_t *parser) {
     lexer_next(parser->lexer);
   }
 
-  while (lexer_ttype(parser->lexer) != TT_RBRACE) {
+  while (!is_eof(parser) && !is_ttype(parser, TT_RBRACE)) {
     node = parse_statement(parser);
     root = node_new_seq(root, node);
   }
