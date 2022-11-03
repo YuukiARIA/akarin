@@ -97,7 +97,7 @@ static void succ(lexer_t *lexer) {
   }
   else if (lexer->cur == '\n') {
     ++lexer->location.line;
-    lexer->location.column = 0;
+    lexer->location.column = 1;
   }
   else {
     ++lexer->location.column;
