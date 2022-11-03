@@ -329,6 +329,7 @@ static node_t *parse_muldiv(parser_t *parser) {
 static node_t *parse_atomic(parser_t *parser) {
   node_t *node = NULL;
   int value;
+  location_t location;
 
   switch (lexer_ttype(parser->lexer)) {
   case TT_INTEGER:
@@ -363,7 +364,8 @@ static node_t *parse_atomic(parser_t *parser) {
     break;
   }
 
-  fprintf(stderr, "unexpected %s\n", ttype_to_string(lexer_ttype(parser->lexer)));
+  location = lexer_get_location(parser->lexer);
+  fprintf(stderr, "error: unexpected %s. (line:%d,column:%d)\n", ttype_to_string(lexer_ttype(parser->lexer)), location.line, location.column);
   lexer_next(parser->lexer);
   return NULL;
 }
