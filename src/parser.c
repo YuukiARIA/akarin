@@ -47,7 +47,6 @@ void parser_release(parser_t **pparser) {
 }
 
 node_t *parser_parse(parser_t *parser) {
-  lexer_succ(parser->lexer);
   lexer_next(parser->lexer);
   return parse_program(parser);
 }
