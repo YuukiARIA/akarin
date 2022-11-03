@@ -8,14 +8,13 @@
 #define TEXT_LEN_MAX    ( TEXT_BUF_SIZE - 1 )
 
 struct lexer_t {
-  FILE   *input;
-  int     cur;
-  int     column;
-  int     line;
-  int     bufpos;
-  char    text[TEXT_BUF_SIZE];
-  ttype_t ttype;
-  int     ivalue;
+  FILE      *input;
+  int        cur;
+  location_t location;
+  int        bufpos;
+  char       text[TEXT_BUF_SIZE];
+  ttype_t    ttype;
+  int        ivalue;
 };
 
 struct keyword_t {
@@ -57,8 +56,8 @@ static void append_char(lexer_t *lexer, int c) {
 lexer_t *lexer_new(FILE *input) {
   lexer_t *lexer = (lexer_t *)malloc(sizeof(lexer_t));
   lexer->input = input;
-  lexer->column = 0;
-  lexer->line = 0;
+  lexer->location.column = 1;
+  lexer->location.line = 1;
   lexer->cur = getc(input);
   return lexer;
 }
@@ -70,6 +69,10 @@ void lexer_release(lexer_t **plexer) {
 
 int lexer_is_eof(lexer_t *lexer) {
   return lexer->cur == EOF;
+}
+
+location_t lexer_get_location(lexer_t *lexer) {
+  return lexer->location;
 }
 
 ttype_t lexer_ttype(lexer_t *lexer) {
@@ -93,11 +96,11 @@ static void succ(lexer_t *lexer) {
     return;
   }
   else if (lexer->cur == '\n') {
-    ++lexer->line;
-    lexer->column = 0;
+    ++lexer->location.line;
+    lexer->location.column = 0;
   }
   else {
-    ++lexer->column;
+    ++lexer->location.column;
   }
   lexer->cur = getc(lexer->input);
 }
@@ -328,7 +331,7 @@ void lexer_next(lexer_t *lexer) {
     return;
   }
 
-  printf("UNKNOWN: %c\n", c);
+  printf("UNKNOWN: %c (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
   lexer->ttype = TT_UNKNOWN;
   succ(lexer);
 }
