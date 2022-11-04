@@ -337,7 +337,7 @@ void lexer_next(lexer_t *lexer) {
     return;
   }
 
-  fprintf(stderr, "UNKNOWN: %c (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
+  fprintf(stderr, "error: unrecognizable character '%c' (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
   lexer->ttype = TT_UNKNOWN;
   succ(lexer);
   ++lexer->error_count;
