@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
   emitter_t *emitter;
   emit_mode_t emit_mode = EMIT_WHITESPACE;
   int i;
+  int error_count;
 
   /* process command line args */
   for (i = 1; i < argc; ++i) {
@@ -80,18 +81,24 @@ int main(int argc, char *argv[]) {
     input = NULL;
   }
 
+  error_count = parser_get_total_error_count(parser);
   parser_release(&parser);
 
-  if (dump_tree) {
-    node_dump_tree(node);
+  if (error_count == 0) {
+    if (dump_tree) {
+      node_dump_tree(node);
+    }
+    else {
+      codegen = codegen_new(node, emitter);
+      codegen_generate(codegen);
+      codegen_release(&codegen);
+    }
   }
   else {
-    codegen = codegen_new(node, emitter);
-    codegen_generate(codegen);
-    codegen_release(&codegen);
+    fprintf(stderr, "%d errors found.\n", error_count);
   }
 
   emitter_release(&emitter);
   node_release(&node);
-  return 0;
+  return error_count == 0 ? 0 : 1;
 }
