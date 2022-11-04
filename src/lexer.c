@@ -15,6 +15,7 @@ struct lexer_t {
   char       text[TEXT_BUF_SIZE];
   ttype_t    ttype;
   int        ivalue;
+  int        error_count;
 };
 
 struct keyword_t {
@@ -59,6 +60,7 @@ lexer_t *lexer_new(FILE *input) {
   lexer->location.column = 1;
   lexer->location.line = 1;
   lexer->cur = getc(input);
+  lexer->error_count = 0;
   return lexer;
 }
 
@@ -85,6 +87,10 @@ int lexer_int_value(lexer_t *lexer) {
 
 const char *lexer_text(lexer_t *lexer) {
   return lexer->text;
+}
+
+int lexer_get_error_count(lexer_t *lexer) {
+  return lexer->error_count;
 }
 
 static int peek(lexer_t *lexer) {
@@ -331,7 +337,8 @@ void lexer_next(lexer_t *lexer) {
     return;
   }
 
-  printf("UNKNOWN: %c (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
+  fprintf(stderr, "UNKNOWN: %c (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
   lexer->ttype = TT_UNKNOWN;
   succ(lexer);
+  ++lexer->error_count;
 }

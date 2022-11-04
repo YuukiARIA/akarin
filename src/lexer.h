@@ -13,3 +13,4 @@ ttype_t     lexer_ttype(lexer_t *lexer);
 location_t  lexer_get_location(lexer_t *lexer);
 int         lexer_int_value(lexer_t *lexer);
 const char *lexer_text(lexer_t *lexer);
+int         lexer_get_error_count(lexer_t *lexer);
