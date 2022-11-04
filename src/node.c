@@ -187,6 +187,10 @@ node_t *node_get_cond(node_t *node) {
   return node->cond;
 }
 
+int node_is_assignable(node_t *node) {
+  return node->ntype == NT_VARIABLE || node->ntype == NT_ARRAY;
+}
+
 static void print_indent(int indent) {
   int i;
   for (i = 0; i < indent - 1; ++i) {

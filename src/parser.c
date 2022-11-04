@@ -239,6 +239,7 @@ static node_t *parse_array_statement(parser_t *parser) {
 
 static node_t *parse_halt_statement(parser_t *parser) {
   expect(parser, TT_KW_HALT);
+  expect(parser, TT_SEMICOLON);
   return node_new_halt();
 }
 
@@ -254,9 +255,16 @@ static node_t *parse_expr(parser_t *parser) {
 
 static node_t *parse_assign(parser_t *parser) {
   node_t *x, *y;
+  location_t location = lexer_get_location(parser->lexer);
+
   x = parse_or(parser);
   if (is_ttype(parser, TT_EQ)) {
     lexer_next(parser->lexer);
+
+    if (!node_is_assignable(x)) {
+      fprintf(stderr, "error: left hand side of assignment should be variable or array. (line:%d,column:%d)\n", location.line, location.column);
+    }
+
     y = parse_assign(parser);
     x = node_new_assign(x, y);
   }
