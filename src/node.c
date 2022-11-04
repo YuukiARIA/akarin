@@ -39,6 +39,10 @@ void node_release(node_t **pnode) {
   *pnode = NULL;
 }
 
+node_t *node_new_invalid(void) {
+  return node_new(NT_INVALID);
+}
+
 node_t *node_new_empty(void) {
   return node_new(NT_EMPTY);
 }

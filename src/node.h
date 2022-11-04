@@ -27,6 +27,7 @@ typedef enum {
 typedef struct node_t node_t;
 
 node_t     *node_new(ntype_t ntype);
+node_t     *node_new_invalid(void);
 node_t     *node_new_empty(void);
 node_t     *node_new_seq(node_t *first, node_t *second);
 node_t     *node_new_expr(node_t *expr);
