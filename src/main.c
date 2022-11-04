@@ -23,14 +23,31 @@ static void show_help(void) {
   printf("    -d              Dump syntax tree.\n");
 }
 
+static emitter_t *create_emitter(emit_mode_t emit_mode) {
+  switch (emit_mode) {
+  case EMIT_SYMBOLIC:
+    return emitter_ws_new('S', 'T', 'L');
+  case EMIT_PSEUDO_CODE:
+    return emitter_pseudo_new(8);
+  default:
+    return emitter_ws_new(' ', '\t', '\n');
+  }
+}
+
+static void generate_code(node_t *node, emit_mode_t emit_mode) {
+  emitter_t *emitter = create_emitter(emit_mode);
+  codegen_t *codegen = codegen_new(node, emitter);
+  codegen_generate(codegen);
+  codegen_release(&codegen);
+  emitter_release(&emitter);
+}
+
 int main(int argc, char *argv[]) {
   FILE *input = stdin;
   int needs_close = 0;
   int dump_tree = 0;
   parser_t *parser;
   node_t *node;
-  codegen_t *codegen;
-  emitter_t *emitter;
   emit_mode_t emit_mode = EMIT_WHITESPACE;
   int i;
   int error_count;
@@ -61,18 +78,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  switch (emit_mode) {
-  case EMIT_SYMBOLIC:
-    emitter = emitter_ws_new('S', 'T', 'L');
-    break;
-  case EMIT_PSEUDO_CODE:
-    emitter = emitter_pseudo_new(8);
-    break;
-  default:
-    emitter = emitter_ws_new(' ', '\t', '\n');
-    break;
-  }
-
   parser = parser_new(input);
   node = parser_parse(parser);
 
@@ -89,16 +94,13 @@ int main(int argc, char *argv[]) {
       node_dump_tree(node);
     }
     else {
-      codegen = codegen_new(node, emitter);
-      codegen_generate(codegen);
-      codegen_release(&codegen);
+      generate_code(node, emit_mode);
     }
   }
   else {
     fprintf(stderr, "%d errors found.\n", error_count);
   }
 
-  emitter_release(&emitter);
   node_release(&node);
   return error_count == 0 ? 0 : 1;
 }
