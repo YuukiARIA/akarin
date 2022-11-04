@@ -6,6 +6,7 @@
 
 struct parser_t {
   lexer_t *lexer;
+  int      error_count;
 };
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
@@ -38,6 +39,7 @@ static node_t *parse_array_indexer(parser_t *parser);
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
   parser->lexer = lexer_new(input);
+  parser->error_count = 0;
   return parser;
 }
 
@@ -50,6 +52,10 @@ void parser_release(parser_t **pparser) {
 node_t *parser_parse(parser_t *parser) {
   lexer_next(parser->lexer);
   return parse_program(parser);
+}
+
+int parser_get_total_error_count(parser_t *parser) {
+  return lexer_get_error_count(parser->lexer) + parser->error_count;
 }
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
@@ -93,6 +99,7 @@ static int expect(parser_t *parser, ttype_t ttype) {
           ttype_to_string(ttype),
           location.line,
           location.column);
+  ++parser->error_count;
   return 0;
 }
 
@@ -263,6 +270,7 @@ static node_t *parse_assign(parser_t *parser) {
 
     if (!node_is_assignable(x)) {
       fprintf(stderr, "error: left hand side of assignment should be variable or array. (line:%d,column:%d)\n", location.line, location.column);
+      ++parser->error_count;
     }
 
     y = parse_assign(parser);
@@ -375,6 +383,7 @@ static node_t *parse_atomic(parser_t *parser) {
   location = lexer_get_location(parser->lexer);
   fprintf(stderr, "error: unexpected %s. (line:%d,column:%d)\n", ttype_to_string(lexer_ttype(parser->lexer)), location.line, location.column);
   lexer_next(parser->lexer);
+  ++parser->error_count;
   return node_new_invalid();
 }
 
