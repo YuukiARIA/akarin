@@ -88,6 +88,12 @@ node_t *node_new_integer(int value) {
   return node;
 }
 
+node_t *node_new_ident(const char *name) {
+  node_t *node = node_new(NT_IDENT);
+  strncpy(node->name, name, VARIABLE_NAME_MAX);
+  return node;
+}
+
 node_t *node_new_variable(const char *name) {
   node_t *node = node_new(NT_VARIABLE);
   strncpy(node->name, name, VARIABLE_NAME_MAX);
@@ -244,6 +250,10 @@ static void dump_rec(node_t *node, int indent) {
   case NT_INTEGER:
     print_indent(indent);
     printf("Integer %d\n", node->value);
+    break;
+  case NT_IDENT:
+    print_indent(indent);
+    printf("Ident %s\n", node->name);
     break;
   case NT_VARIABLE:
     print_indent(indent);

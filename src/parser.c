@@ -35,6 +35,7 @@ static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
 static node_t *parse_variable(parser_t *parser);
 static node_t *parse_array_indexer(parser_t *parser);
+static node_t *parse_ident(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
@@ -226,12 +227,12 @@ static node_t *parse_getc(parser_t *parser) {
 }
 
 static node_t *parse_array_statement(parser_t *parser) {
-  node_t *var;
+  node_t *ident;
   int size;
 
   expect(parser, TT_KW_ARRAY);
 
-  var = parse_variable(parser);
+  ident = parse_ident(parser);
 
   expect(parser, TT_LBRACKET);
 
@@ -241,7 +242,7 @@ static node_t *parse_array_statement(parser_t *parser) {
   expect(parser, TT_RBRACKET);
   expect(parser, TT_SEMICOLON);
 
-  return node_new_array_decl(var, size);
+  return node_new_array_decl(ident, size);
 }
 
 static node_t *parse_halt_statement(parser_t *parser) {
@@ -402,4 +403,13 @@ static node_t *parse_array_indexer(parser_t *parser) {
   indexer = parse_expr(parser);
   expect(parser, TT_RBRACKET);
   return indexer;
+}
+
+static node_t *parse_ident(parser_t *parser) {
+  if (is_ttype(parser, TT_SYMBOL)) {
+    node_t *node = node_new_ident(lexer_text(parser->lexer));
+    lexer_next(parser->lexer);
+    return node;
+  }
+  return node_new_invalid();
 }
