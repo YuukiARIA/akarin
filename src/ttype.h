@@ -42,6 +42,8 @@ typedef enum {
   TT_KW_GETC,
   TT_KW_ARRAY,
   TT_KW_HALT,
+  TT_KW_FUNC,
+  TT_KW_RETURN,
 
   TT_EOF = -1,
 } ttype_t;

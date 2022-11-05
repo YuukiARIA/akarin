@@ -24,16 +24,18 @@ struct keyword_t {
 };
 
 static const struct keyword_t g_keywords[] = {
-  { "if",    TT_KW_IF    },
-  { "else",  TT_KW_ELSE  },
-  { "while", TT_KW_WHILE },
-  { "break", TT_KW_BREAK },
-  { "puti",  TT_KW_PUTI  },
-  { "putc",  TT_KW_PUTC  },
-  { "geti",  TT_KW_GETI  },
-  { "getc",  TT_KW_GETC  },
-  { "array", TT_KW_ARRAY },
-  { "halt",  TT_KW_HALT  },
+  { "if",     TT_KW_IF     },
+  { "else",   TT_KW_ELSE   },
+  { "while",  TT_KW_WHILE  },
+  { "break",  TT_KW_BREAK  },
+  { "puti",   TT_KW_PUTI   },
+  { "putc",   TT_KW_PUTC   },
+  { "geti",   TT_KW_GETI   },
+  { "getc",   TT_KW_GETC   },
+  { "array",  TT_KW_ARRAY  },
+  { "halt",   TT_KW_HALT   },
+  { "func",   TT_KW_FUNC   },
+  { "return", TT_KW_RETURN },
 };
 static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
 
