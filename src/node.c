@@ -193,6 +193,11 @@ int node_is_assignable(node_t *node) {
 
 static void print_indent(int indent) {
   int i;
+
+  if (indent == 0) {
+    return;
+  }
+
   for (i = 0; i < indent - 1; ++i) {
     putchar('|');
     putchar(' ');
