@@ -212,6 +212,10 @@ void lexer_lex_symbol(lexer_t *lexer) {
 
 static int lex_op(lexer_t *lexer) {
   switch (peek(lexer)) {
+  case ',':
+    succ(lexer);
+    lexer->ttype = TT_COMMA;
+    return 1;
   case ';':
     succ(lexer);
     lexer->ttype = TT_SEMICOLON;

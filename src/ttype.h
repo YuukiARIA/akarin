@@ -3,6 +3,7 @@
 typedef enum {
   TT_UNKNOWN = 0,
 
+  TT_COMMA,
   TT_SEMICOLON,
 
   TT_EQ,

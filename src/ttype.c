@@ -5,6 +5,7 @@
 const char *ttype_to_string(ttype_t ttype) {
   switch (ttype) {
     CASE_RETURN(TT_UNKNOWN);
+    CASE_RETURN(TT_COMMA);
     CASE_RETURN(TT_SEMICOLON);
     CASE_RETURN(TT_EQ);
     CASE_RETURN(TT_EQEQ);
