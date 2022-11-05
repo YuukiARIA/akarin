@@ -210,8 +210,8 @@ static void gen_geti_statement(codegen_t *codegen, node_t *node) {
 
 static void gen_array_decl_statement(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_l(node);
-  int size = node_get_value(node);
-  allocate(codegen, node_get_name(ident), size);
+  node_t *capacity = node_get_r(node);
+  allocate(codegen, node_get_name(ident), node_get_value(capacity));
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {

@@ -36,6 +36,7 @@ static node_t *parse_atomic(parser_t *parser);
 static node_t *parse_variable(parser_t *parser);
 static node_t *parse_array_indexer(parser_t *parser);
 static node_t *parse_ident(parser_t *parser);
+static node_t *parse_integer(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
@@ -226,23 +227,20 @@ static node_t *parse_getc(parser_t *parser) {
   return node;
 }
 
+/*
+ * <<ArrayDeclStatement>> ::= 'array' <Ident> '[' <Integer> ']' ';'
+ */
 static node_t *parse_array_statement(parser_t *parser) {
-  node_t *ident;
-  int size;
+  node_t *ident, *capacity;
 
   expect(parser, TT_KW_ARRAY);
-
   ident = parse_ident(parser);
-
   expect(parser, TT_LBRACKET);
-
-  size = lexer_int_value(parser->lexer);
-  lexer_next(parser->lexer);
-
+  capacity = parse_integer(parser);
   expect(parser, TT_RBRACKET);
   expect(parser, TT_SEMICOLON);
 
-  return node_new_array_decl(ident, size);
+  return node_new_array_decl(ident, capacity);
 }
 
 static node_t *parse_halt_statement(parser_t *parser) {
@@ -345,15 +343,12 @@ static node_t *parse_muldiv(parser_t *parser) {
 
 static node_t *parse_atomic(parser_t *parser) {
   node_t *node = NULL;
-  int value;
   location_t location;
 
   switch (lexer_ttype(parser->lexer)) {
   case TT_INTEGER:
   case TT_CHAR:
-    value = lexer_int_value(parser->lexer);
-    lexer_next(parser->lexer);
-    return node_new_integer(value);
+    return parse_integer(parser);
   case TT_PLUS:
     /* simply ignore */
     lexer_next(parser->lexer);
@@ -408,6 +403,15 @@ static node_t *parse_array_indexer(parser_t *parser) {
 static node_t *parse_ident(parser_t *parser) {
   if (is_ttype(parser, TT_SYMBOL)) {
     node_t *node = node_new_ident(lexer_text(parser->lexer));
+    lexer_next(parser->lexer);
+    return node;
+  }
+  return node_new_invalid();
+}
+
+static node_t *parse_integer(parser_t *parser) {
+  if (is_ttype(parser, TT_INTEGER) || is_ttype(parser, TT_CHAR)) {
+    node_t *node = node_new_integer(lexer_int_value(parser->lexer));
     lexer_next(parser->lexer);
     return node;
   }

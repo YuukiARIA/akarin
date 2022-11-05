@@ -150,10 +150,10 @@ node_t *node_new_getc(node_t *var) {
   return node;
 }
 
-node_t *node_new_array_decl(node_t *var, int size) {
+node_t *node_new_array_decl(node_t *ident, node_t *capacity) {
   node_t *node = node_new(NT_ARRAY_DECL);
-  node->l = var;
-  node->value = size;
+  node->l = ident;
+  node->r = capacity;
   return node;
 }
 
@@ -304,8 +304,7 @@ static void dump_rec(node_t *node, int indent) {
   case NT_ARRAY_DECL:
     puts_indent(indent, "ArrayDecl-Statement");
     dump_rec(node->l, indent + 1);
-    print_indent(indent + 2);
-    printf("Capacity %d\n", node->value);
+    dump_rec(node->r, indent + 1);
     break;
   case NT_HALT:
     puts_indent(indent, "Halt-Statement");

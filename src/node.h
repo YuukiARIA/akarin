@@ -46,7 +46,7 @@ node_t     *node_new_puti(node_t *expr);
 node_t     *node_new_putc(node_t *expr);
 node_t     *node_new_geti(node_t *var);
 node_t     *node_new_getc(node_t *var);
-node_t     *node_new_array_decl(node_t *var, int size);
+node_t     *node_new_array_decl(node_t *ident, node_t *capacity);
 node_t     *node_new_halt(void);
 
 void        node_release(node_t **pnode);
