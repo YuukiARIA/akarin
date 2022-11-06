@@ -3,7 +3,7 @@ FROM gcc AS builder
 WORKDIR /build
 ADD Makefile Makefile
 ADD src/ src/
-RUN make -j 4 CFLAGS='-Wall -O2 -static'
+RUN make release -j 4 CFLAGS='-Wall -static'
 
 FROM scratch
 
