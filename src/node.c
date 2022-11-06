@@ -4,27 +4,58 @@
 #include "node.h"
 #include "utils/memory.h"
 
-#define VARIABLE_NAME_MAX ( 63 )
+#define VARIABLE_NAME_MAX           ( 63 )
+#define INITIAL_NODE_ARRAY_CAPACITY ( 4 )
+
+typedef struct {
+  int      count;
+  int      capacity;
+  node_t **nodes;
+} node_array_t;
 
 struct node_t {
-  ntype_t     ntype;
-  unary_op_t  uop;
-  binary_op_t bop;
-  int         value;
-  char        name[VARIABLE_NAME_MAX + 1];
-  node_t     *l;
-  node_t     *r;
-  node_t     *cond;
+  ntype_t       ntype;
+  unary_op_t    uop;
+  binary_op_t   bop;
+  int           value;
+  char          name[VARIABLE_NAME_MAX + 1];
+  node_t       *l;
+  node_t       *r;
+  node_t       *cond;
+  node_array_t *children;
 };
+
+static node_array_t *node_array_new(void) {
+  node_array_t *node_array = (node_array_t *)AK_MEM_MALLOC(sizeof(node_array_t));
+  node_array->count    = 0;
+  node_array->capacity = INITIAL_NODE_ARRAY_CAPACITY;
+  node_array->nodes    = (node_t **)AK_MEM_CALLOC(node_array->capacity, sizeof(node_array_t *));
+  return node_array;
+}
+
+static void node_array_release(node_array_t **pnode_array) {
+  AK_MEM_FREE((*pnode_array)->nodes);
+  AK_MEM_FREE(*pnode_array);
+  *pnode_array = NULL;
+}
+
+static void node_array_add(node_array_t *node_array, node_t *node) {
+  if (node_array->count == node_array->capacity) {
+    node_array->capacity *= 2;
+    node_array->nodes = (node_t **)AK_MEM_REALLOC(node_array->nodes, node_array->capacity);
+  }
+  node_array->nodes[node_array->count++] = node;
+}
 
 node_t *node_new(ntype_t ntype) {
   node_t *node = (node_t *)AK_MEM_MALLOC(sizeof(node_t));
-  node->ntype = ntype;
-  node->uop   = UOP_INVALID;
-  node->bop   = BOP_INVALID;
-  node->value = 0;
-  node->l     = NULL;
-  node->r     = NULL;
+  node->ntype    = ntype;
+  node->uop      = UOP_INVALID;
+  node->bop      = BOP_INVALID;
+  node->value    = 0;
+  node->l        = NULL;
+  node->r        = NULL;
+  node->children = node_array_new();
   return node;
 }
 
@@ -39,6 +70,7 @@ void node_release(node_t **pnode) {
   if (node->cond) {
     node_release(&node->cond);
   }
+  node_array_release(&node->children);
   AK_MEM_FREE(node);
   *pnode = NULL;
 }
@@ -163,6 +195,10 @@ node_t *node_new_array_decl(node_t *ident, node_t *capacity) {
 
 node_t *node_new_halt(void) {
   return node_new(NT_HALT);
+}
+
+void node_add_child(node_t *node, node_t *child) {
+  node_array_add(node->children, child);
 }
 
 ntype_t node_get_ntype(node_t *node) {
