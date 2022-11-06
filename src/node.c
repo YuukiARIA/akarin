@@ -33,8 +33,11 @@ void node_release(node_t **pnode) {
   if (node->l) {
     node_release(&node->l);
   }
-  if ((*pnode)->r) {
+  if (node->r) {
     node_release(&node->r);
+  }
+  if (node->cond) {
+    node_release(&node->cond);
   }
   AK_MEM_FREE(node);
   *pnode = NULL;
