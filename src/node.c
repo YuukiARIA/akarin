@@ -4,14 +4,8 @@
 #include "node.h"
 #include "utils/memory.h"
 
-#define VARIABLE_NAME_MAX           ( 63 )
-#define INITIAL_NODE_ARRAY_CAPACITY ( 4 )
-
-typedef struct {
-  int      count;
-  int      capacity;
-  node_t **nodes;
-} node_array_t;
+#define VARIABLE_NAME_MAX         ( 63 )
+#define INITIAL_CHILDREN_CAPACITY ( 4 )
 
 struct node_t {
   ntype_t       ntype;
@@ -22,40 +16,22 @@ struct node_t {
   node_t       *l;
   node_t       *r;
   node_t       *cond;
-  node_array_t *children;
+  int           children_count;
+  int           children_capacity;
+  node_t      **children;
 };
-
-static node_array_t *node_array_new(void) {
-  node_array_t *node_array = (node_array_t *)AK_MEM_MALLOC(sizeof(node_array_t));
-  node_array->count    = 0;
-  node_array->capacity = INITIAL_NODE_ARRAY_CAPACITY;
-  node_array->nodes    = (node_t **)AK_MEM_CALLOC(node_array->capacity, sizeof(node_array_t *));
-  return node_array;
-}
-
-static void node_array_release(node_array_t **pnode_array) {
-  AK_MEM_FREE((*pnode_array)->nodes);
-  AK_MEM_FREE(*pnode_array);
-  *pnode_array = NULL;
-}
-
-static void node_array_add(node_array_t *node_array, node_t *node) {
-  if (node_array->count == node_array->capacity) {
-    node_array->capacity *= 2;
-    node_array->nodes = (node_t **)AK_MEM_REALLOC(node_array->nodes, node_array->capacity);
-  }
-  node_array->nodes[node_array->count++] = node;
-}
 
 node_t *node_new(ntype_t ntype) {
   node_t *node = (node_t *)AK_MEM_MALLOC(sizeof(node_t));
-  node->ntype    = ntype;
-  node->uop      = UOP_INVALID;
-  node->bop      = BOP_INVALID;
-  node->value    = 0;
-  node->l        = NULL;
-  node->r        = NULL;
-  node->children = node_array_new();
+  node->ntype             = ntype;
+  node->uop               = UOP_INVALID;
+  node->bop               = BOP_INVALID;
+  node->value             = 0;
+  node->l                 = NULL;
+  node->r                 = NULL;
+  node->children_count    = 0;
+  node->children_capacity = INITIAL_CHILDREN_CAPACITY;
+  node->children          = (node_t **)AK_MEM_CALLOC(node->children_capacity, sizeof(node_t *));
   return node;
 }
 
@@ -70,7 +46,10 @@ void node_release(node_t **pnode) {
   if (node->cond) {
     node_release(&node->cond);
   }
-  node_array_release(&node->children);
+  for (int i = 0; i < node->children_count; ++i) {
+    AK_MEM_FREE(node->children[i]);
+  }
+  AK_MEM_FREE(node->children);
   AK_MEM_FREE(node);
   *pnode = NULL;
 }
@@ -198,15 +177,19 @@ node_t *node_new_halt(void) {
 }
 
 void node_add_child(node_t *node, node_t *child) {
-  node_array_add(node->children, child);
+  if (node->children_count == node->children_capacity) {
+    node->children_capacity *= 2;
+    node->children = (node_t **)AK_MEM_REALLOC(node->children, node->children_capacity);
+  }
+  node->children[node->children_count++] = child;
 }
 
 node_t *node_get_child(node_t *node, int i) {
-  return node->children->nodes[i];
+  return node->children[i];
 }
 
 int node_get_child_count(node_t *node) {
-  return node->children->count;
+  return node->children_count;
 }
 
 ntype_t node_get_ntype(node_t *node) {
