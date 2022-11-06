@@ -1,13 +1,19 @@
-CFLAGS   = -Wall -O2
-SRCDIRS  = $(shell find src -type d)
-OBJDIRS  = $(SRCDIRS:src%=obj%)
-DEPSDIRS = $(SRCDIRS:src%=deps%)
-SRCS     = $(shell find src -name '*.c' -type f)
-OBJS     = $(SRCS:src/%.c=obj/%.o)
-TARGET   = ./bin/akarin
-PREFIX   = /usr/local/bin
+CFLAGS         = -Wall -pedantic-errors
+CFLAGS_DEBUG   = -g -DDEBUG
+CFLAGS_RELEASE = -O2
+SRCDIRS        = $(shell find src -type d)
+OBJDIRS        = $(SRCDIRS:src%=obj%)
+DEPSDIRS       = $(SRCDIRS:src%=deps%)
+SRCS           = $(shell find src -name '*.c' -type f)
+OBJS           = $(SRCS:src/%.c=obj/%.o)
+TARGET         = ./bin/akarin
+PREFIX         = /usr/local/bin
 
-.PHONY: dirs clean install
+.PHONY: debug release dirs clean install
+
+debug: CFLAGS += $(CFLAGS_DEBUG)
+release: CFLAGS += $(CFLAGS_RELEASE)
+debug release: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@mkdir -p bin
