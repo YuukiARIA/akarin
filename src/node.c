@@ -47,7 +47,7 @@ void node_release(node_t **pnode) {
     node_release(&node->cond);
   }
   for (int i = 0; i < node->children_count; ++i) {
-    AK_MEM_FREE(node->children[i]);
+    node_release(&node->children[i]);
   }
   AK_MEM_FREE(node->children);
   AK_MEM_FREE(node);
