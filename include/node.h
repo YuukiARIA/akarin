@@ -52,6 +52,8 @@ node_t     *node_new_halt(void);
 void        node_release(node_t **pnode);
 
 void        node_add_child(node_t *node, node_t *child);
+node_t     *node_get_child(node_t *node, int i);
+int         node_get_child_count(node_t *node);
 ntype_t     node_get_ntype(node_t *node);
 unary_op_t  node_get_uop(node_t *node);
 binary_op_t node_get_bop(node_t *node);

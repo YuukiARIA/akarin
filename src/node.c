@@ -201,6 +201,14 @@ void node_add_child(node_t *node, node_t *child) {
   node_array_add(node->children, child);
 }
 
+node_t *node_get_child(node_t *node, int i) {
+  return node->children->nodes[i];
+}
+
+int node_get_child_count(node_t *node) {
+  return node->children->count;
+}
+
 ntype_t node_get_ntype(node_t *node) {
   return node->ntype;
 }
