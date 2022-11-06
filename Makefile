@@ -1,6 +1,7 @@
-CFLAGS         = -Wall -pedantic-errors
+CFLAGS_EXTRA   =
 CFLAGS_DEBUG   = -g -DDEBUG
 CFLAGS_RELEASE = -O2
+CFLAGS         = -I./include -Wall -pedantic-errors $(CFLAGS_EXTRA)
 SRCDIRS        = $(shell find src -type d)
 OBJDIRS        = $(SRCDIRS:src%=obj%)
 DEPSDIRS       = $(SRCDIRS:src%=deps%)
@@ -21,7 +22,7 @@ $(TARGET): $(OBJS)
 
 obj/%.o: src/%.c dirs
 	$(CC) $(CFLAGS) -c $< -o $@
-	$(CC) -MT $@ -MM $< > deps/$*.d
+	$(CC) $(CFLAGS) -MT $@ -MM $< > deps/$*.d
 
 dirs:
 	mkdir -p $(OBJDIRS) $(DEPSDIRS)
