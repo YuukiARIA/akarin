@@ -176,6 +176,18 @@ node_t *node_new_halt(void) {
   return node_new(NT_HALT);
 }
 
+node_t *node_new_func(node_t *ident, node_t *param, node_t *body) {
+  node_t *node = node_new(NT_FUNC);
+  node_add_child(node, ident);
+  node_add_child(node, param);
+  node_add_child(node, body);
+  return node;
+}
+
+node_t *node_new_func_param(void) {
+  return node_new(NT_FUNC_PARAM);
+}
+
 void node_add_child(node_t *node, node_t *child) {
   if (node->children_count == node->children_capacity) {
     node->children_capacity *= 2;
@@ -339,6 +351,18 @@ static void dump_rec(node_t *node, int indent) {
     break;
   case NT_HALT:
     puts_indent(indent, "Halt-Statement");
+    break;
+  case NT_FUNC:
+    puts_indent(indent, "Func");
+    dump_rec(node->children[0], indent + 1);
+    dump_rec(node->children[1], indent + 1);
+    dump_rec(node->children[2], indent + 1);
+    break;
+  case NT_FUNC_PARAM:
+    puts_indent(indent, "FuncParam");
+    for (int i = 0; i < node->children_count; ++i) {
+      dump_rec(node->children[i], indent + 1);
+    }
     break;
   }
 }

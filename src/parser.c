@@ -25,6 +25,7 @@ static node_t *parse_geti(parser_t *parser);
 static node_t *parse_getc(parser_t *parser);
 static node_t *parse_array_statement(parser_t *parser);
 static node_t *parse_halt_statement(parser_t *parser);
+static node_t *parse_func_statement(parser_t *parser);
 static node_t *parse_expr_statement(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
@@ -150,6 +151,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_array_statement(parser);
   case TT_KW_HALT:
     return parse_halt_statement(parser);
+  case TT_KW_FUNC:
+    return parse_func_statement(parser);
   default:
     return parse_expr_statement(parser);
   }
@@ -248,6 +251,38 @@ static node_t *parse_halt_statement(parser_t *parser) {
   expect(parser, TT_KW_HALT);
   expect(parser, TT_SEMICOLON);
   return node_new_halt();
+}
+
+/*
+ * <<FuncParam>> ::= [ <Ident> { ',' <Ident> } ]
+ */
+static node_t *parse_func_param(parser_t *parser) {
+  node_t *param = node_new_func_param();
+
+  if (is_ttype(parser, TT_SYMBOL)) {
+    node_add_child(param, parse_ident(parser));
+    while (is_ttype(parser, TT_COMMA)) {
+      expect(parser, TT_COMMA);
+      node_add_child(param, parse_ident(parser));
+    }
+  }
+  return param;
+}
+
+/*
+ * <<FuncStatement>> ::= 'func' '(' <<FuncParam>> ')' <<BlockStatement>>
+ */
+static node_t *parse_func_statement(parser_t *parser) {
+  node_t *ident, *param, *body;
+
+  expect(parser, TT_KW_FUNC);
+  ident = parse_ident(parser);
+  expect(parser, TT_LPAREN);
+  param = parse_func_param(parser);
+  expect(parser, TT_RPAREN);
+  body = parse_block(parser);
+
+  return node_new_func(ident, param, body);
 }
 
 static node_t *parse_expr_statement(parser_t *parser) {

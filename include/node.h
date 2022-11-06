@@ -23,6 +23,8 @@ typedef enum {
   NT_GETC,
   NT_ARRAY_DECL,
   NT_HALT,
+  NT_FUNC,
+  NT_FUNC_PARAM,
 } ntype_t;
 
 typedef struct node_t node_t;
@@ -48,6 +50,8 @@ node_t     *node_new_geti(node_t *var);
 node_t     *node_new_getc(node_t *var);
 node_t     *node_new_array_decl(node_t *ident, node_t *capacity);
 node_t     *node_new_halt(void);
+node_t     *node_new_func(node_t *ident, node_t *param, node_t *body);
+node_t     *node_new_func_param(void);
 
 void        node_release(node_t **pnode);
 
