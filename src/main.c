@@ -5,6 +5,7 @@
 #include "codegen.h"
 #include "emitter_ws.h"
 #include "emitter_pseudo.h"
+#include "utils/memory.h"
 
 typedef enum {
   EMIT_WHITESPACE,
@@ -102,5 +103,7 @@ int main(int argc, char *argv[]) {
   }
 
   node_release(&node);
+
+  AK_MEM_CHECK;
   return error_count == 0 ? 0 : 1;
 }

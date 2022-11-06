@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include "emitter.h"
+#include "utils/memory.h"
 
 void emitter_release(emitter_t **pemitter) {
-  free(*pemitter);
+  AK_MEM_FREE(*pemitter);
   *pemitter = NULL;
 }
 

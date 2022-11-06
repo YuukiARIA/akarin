@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "emitter.h"
+#include "utils/memory.h"
 
 typedef struct {
   emitter_t base;
@@ -37,7 +38,7 @@ static void indent_puts(emitter_t *self, const char *str);
 static void indent(emitter_t *self);
 
 emitter_t *emitter_pseudo_new(int indent) {
-  emitter_pseudo_t *emitter = (emitter_pseudo_t *)malloc(sizeof(emitter_pseudo_t));
+  emitter_pseudo_t *emitter = (emitter_pseudo_t *)AK_MEM_MALLOC(sizeof(emitter_pseudo_t));
 
   EMITTER_OVERRIDE(emitter->base, pseudo);
 

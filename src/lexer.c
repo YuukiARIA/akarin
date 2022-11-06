@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lexer.h"
+#include "utils/memory.h"
 
 #define TEXT_BUF_SIZE   ( 64 )
 #define TEXT_LEN_MAX    ( TEXT_BUF_SIZE - 1 )
@@ -57,7 +58,7 @@ static void append_char(lexer_t *lexer, int c) {
 }
 
 lexer_t *lexer_new(FILE *input) {
-  lexer_t *lexer = (lexer_t *)malloc(sizeof(lexer_t));
+  lexer_t *lexer = (lexer_t *)AK_MEM_MALLOC(sizeof(lexer_t));
   lexer->input = input;
   lexer->location.column = 1;
   lexer->location.line = 1;
@@ -67,7 +68,7 @@ lexer_t *lexer_new(FILE *input) {
 }
 
 void lexer_release(lexer_t **plexer) {
-  free(*plexer);
+  AK_MEM_FREE(*plexer);
   *plexer = NULL;
 }
 

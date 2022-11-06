@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "node.h"
+#include "utils/memory.h"
 
 #define VARIABLE_NAME_MAX ( 63 )
 
@@ -17,7 +18,7 @@ struct node_t {
 };
 
 node_t *node_new(ntype_t ntype) {
-  node_t *node = (node_t *)malloc(sizeof(node_t));
+  node_t *node = (node_t *)AK_MEM_MALLOC(sizeof(node_t));
   node->ntype = ntype;
   node->uop   = UOP_INVALID;
   node->bop   = BOP_INVALID;
@@ -35,7 +36,7 @@ void node_release(node_t **pnode) {
   if ((*pnode)->r) {
     node_release(&node->r);
   }
-  free(node);
+  AK_MEM_FREE(node);
   *pnode = NULL;
 }
 

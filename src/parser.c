@@ -3,6 +3,7 @@
 #include "lexer.h"
 #include "operator.h"
 #include "node.h"
+#include "utils/memory.h"
 
 struct parser_t {
   lexer_t *lexer;
@@ -39,7 +40,7 @@ static node_t *parse_ident(parser_t *parser);
 static node_t *parse_integer(parser_t *parser);
 
 parser_t *parser_new(FILE *input) {
-  parser_t *parser = (parser_t *)malloc(sizeof(parser_t));
+  parser_t *parser = (parser_t *)AK_MEM_MALLOC(sizeof(parser_t));
   parser->lexer = lexer_new(input);
   parser->error_count = 0;
   return parser;
@@ -47,7 +48,7 @@ parser_t *parser_new(FILE *input) {
 
 void parser_release(parser_t **pparser) {
   lexer_release(&(*pparser)->lexer);
-  free(*pparser);
+  AK_MEM_FREE(*pparser);
   *pparser = NULL;
 }
 

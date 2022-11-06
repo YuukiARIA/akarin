@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "emitter.h"
+#include "utils/memory.h"
 
 typedef struct {
   emitter_t base;
@@ -42,7 +43,7 @@ static void emit_chars(emitter_t *self, const char *s);
 static void emit_char(emitter_t *self, char c);
 
 emitter_t *emitter_ws_new(char space, char tab, char newline) {
-  emitter_ws_t *emitter = (emitter_ws_t *)malloc(sizeof(emitter_ws_t));
+  emitter_ws_t *emitter = (emitter_ws_t *)AK_MEM_MALLOC(sizeof(emitter_ws_t));
 
   EMITTER_OVERRIDE(emitter->base, ws);
 
