@@ -14,7 +14,7 @@ typedef enum {
 } emit_mode_t;
 
 static void show_help(void) {
-  printf("\e[1mAkarin\e[0m - A Whitespace Transpiler\n\n");
+  printf("\x1B[1mAkarin\x1B[0m - A Whitespace Transpiler\n\n");
   printf("Usage: akarin [options] [input file]\n\n");
   printf("Read from standard input if no input file was given.\n\n");
   printf("Options:\n");
