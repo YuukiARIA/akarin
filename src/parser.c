@@ -3,11 +3,13 @@
 #include "lexer.h"
 #include "operator.h"
 #include "node.h"
+#include "vartable.h"
 #include "utils/memory.h"
 
 struct parser_t {
-  lexer_t *lexer;
-  int      error_count;
+  lexer_t    *lexer;
+  vartable_t *vartable;
+  int         error_count;
 };
 
 static binary_op_t ttype_to_binary_op(ttype_t ttype);
@@ -44,12 +46,14 @@ static node_t *parse_integer(parser_t *parser);
 parser_t *parser_new(FILE *input) {
   parser_t *parser = (parser_t *)AK_MEM_MALLOC(sizeof(parser_t));
   parser->lexer = lexer_new(input);
+  parser->vartable = vartable_new(NULL);
   parser->error_count = 0;
   return parser;
 }
 
 void parser_release(parser_t **pparser) {
   lexer_release(&(*pparser)->lexer);
+  vartable_release(&(*pparser)->vartable);
   AK_MEM_FREE(*pparser);
   *pparser = NULL;
 }
@@ -259,12 +263,19 @@ static node_t *parse_halt_statement(parser_t *parser) {
  */
 static node_t *parse_func_param(parser_t *parser) {
   node_t *param = node_new_func_param();
+  node_t *ident;
 
   if (is_ttype(parser, TT_SYMBOL)) {
-    node_add_child(param, parse_ident(parser));
+    ident = parse_ident(parser);
+    vartable_add_var(parser->vartable, node_get_name(ident));
+    node_add_child(param, ident);
+
     while (is_ttype(parser, TT_COMMA)) {
       expect(parser, TT_COMMA);
-      node_add_child(param, parse_ident(parser));
+
+      ident = parse_ident(parser);
+      vartable_add_var(parser->vartable, node_get_name(ident));
+      node_add_child(param, ident);
     }
   }
   return param;
@@ -275,6 +286,9 @@ static node_t *parse_func_param(parser_t *parser) {
  */
 static node_t *parse_func_statement(parser_t *parser) {
   node_t *ident, *param, *body;
+  vartable_t *vartable_local = vartable_new(parser->vartable);
+
+  parser->vartable = vartable_local;
 
   expect(parser, TT_KW_FUNC);
   ident = parse_ident(parser);
@@ -282,6 +296,9 @@ static node_t *parse_func_statement(parser_t *parser) {
   param = parse_func_param(parser);
   expect(parser, TT_RPAREN);
   body = parse_block(parser);
+
+  parser->vartable = vartable_get_parent(vartable_local);
+  vartable_release(&vartable_local);
 
   return node_new_func(ident, param, body);
 }
@@ -406,6 +423,9 @@ static node_t *parse_atomic(parser_t *parser) {
     else if (is_ttype(parser, TT_LPAREN)) {
       // TODO: change to NT_IDENT
       node = node_new_func_call(node, parse_func_call_arg(parser));
+    }
+    else {
+      vartable_lookup_or_add_var(parser->vartable, node_get_name(node));
     }
     return node;
   case TT_LPAREN:
