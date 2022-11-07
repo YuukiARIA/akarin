@@ -416,7 +416,8 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   switch (node_get_ntype(lhs)) {
   case NT_VARIABLE:
     {
-      int var_index = get_var_index(codegen, node_get_name(lhs));
+      node_t *ident = node_get_child(lhs, 0);
+      int var_index = get_var_index(codegen, node_get_name(ident));
       emit_push(emitter, var_index);
     }
     break;
@@ -439,7 +440,8 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 
 static void gen_variable(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
-  int var_index = get_var_index(codegen, node_get_name(node));
+  node_t *ident = node_get_child(node, 0);
+  int var_index = get_var_index(codegen, node_get_name(ident));
 
   emit_push(emitter, var_index);
   emit_load(emitter);

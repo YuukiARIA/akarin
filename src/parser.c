@@ -37,7 +37,6 @@ static node_t *parse_comparison(parser_t *parser);
 static node_t *parse_addsub(parser_t *parser);
 static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
-static node_t *parse_variable(parser_t *parser);
 static node_t *parse_array_indexer(parser_t *parser);
 static node_t *parse_func_call_arg(parser_t *parser);
 static node_t *parse_ident(parser_t *parser);
@@ -220,7 +219,7 @@ static node_t *parse_putc(parser_t *parser) {
 static node_t *parse_geti(parser_t *parser) {
   node_t *node;
   expect(parser, TT_KW_GETI);
-  node = node_new_geti(parse_variable(parser));
+  node = node_new_geti(parse_ident(parser));
   expect(parser, TT_SEMICOLON);
   return node;
 }
@@ -231,7 +230,7 @@ static node_t *parse_geti(parser_t *parser) {
 static node_t *parse_getc(parser_t *parser) {
   node_t *node;
   expect(parser, TT_KW_GETC);
-  node = node_new_getc(parse_variable(parser));
+  node = node_new_getc(parse_ident(parser));
   expect(parser, TT_SEMICOLON);
   return node;
 }
@@ -416,16 +415,16 @@ static node_t *parse_atomic(parser_t *parser) {
     node = parse_atomic(parser);
     return node_new_unary(UOP_NOT, node);
   case TT_SYMBOL:
-    node = parse_variable(parser);
+    node = parse_ident(parser);
     if (is_ttype(parser, TT_LBRACKET)) {
       node = node_new_array(node, parse_array_indexer(parser));
     }
     else if (is_ttype(parser, TT_LPAREN)) {
-      // TODO: change to NT_IDENT
       node = node_new_func_call(node, parse_func_call_arg(parser));
     }
     else {
       vartable_lookup_or_add_var(parser->vartable, node_get_name(node));
+      node = node_new_variable(node);
     }
     return node;
   case TT_LPAREN:
@@ -442,15 +441,6 @@ static node_t *parse_atomic(parser_t *parser) {
   lexer_next(parser->lexer);
   ++parser->error_count;
   return node_new_invalid();
-}
-
-static node_t *parse_variable(parser_t *parser) {
-  node_t *node = NULL;
-  if (is_ttype(parser, TT_SYMBOL)) {
-    node = node_new_variable(lexer_text(parser->lexer));
-    lexer_next(parser->lexer);
-  }
-  return node;
 }
 
 static node_t *parse_array_indexer(parser_t *parser) {

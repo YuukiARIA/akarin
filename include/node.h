@@ -41,7 +41,7 @@ node_t     *node_new_binary(binary_op_t bop, node_t *lhs, node_t *rhs);
 node_t     *node_new_assign(node_t *lhs, node_t *rhs);
 node_t     *node_new_integer(int value);
 node_t     *node_new_ident(const char *name);
-node_t     *node_new_variable(const char *name);
+node_t     *node_new_variable(node_t *ident);
 node_t     *node_new_array(node_t *var, node_t *indexer);
 node_t     *node_new_func_call(node_t *ident, node_t *arg);
 node_t     *node_new_func_call_arg(void);

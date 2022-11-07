@@ -109,9 +109,9 @@ node_t *node_new_ident(const char *name) {
   return node;
 }
 
-node_t *node_new_variable(const char *name) {
+node_t *node_new_variable(node_t *ident) {
   node_t *node = node_new(NT_VARIABLE);
-  strncpy(node->name, name, VARIABLE_NAME_MAX);
+  node_add_child(node, ident);
   return node;
 }
 
@@ -310,8 +310,8 @@ static void dump_rec(node_t *node, int indent) {
     printf("Ident %s\n", node->name);
     break;
   case NT_VARIABLE:
-    print_indent(indent);
-    printf("Variable %s\n", node->name);
+    puts_indent(indent, "Variable");
+    dump_rec(node->children[0], indent + 1);
     break;
   case NT_ARRAY:
     puts_indent(indent, "Array");
