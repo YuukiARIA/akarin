@@ -41,6 +41,10 @@ void vartable_release(vartable_t **pvartable) {
   *pvartable = NULL;
 }
 
+vartable_t *vartable_get_parent(vartable_t *vartable) {
+  return vartable->parent;
+}
+
 static varentry_t *lookup(vartable_t *vartable, const char *name) {
   for (int i = 0; i < vartable->count; ++i) {
     varentry_t *entry = vartable->vars[i];
