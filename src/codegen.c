@@ -3,17 +3,17 @@
 #include <string.h>
 #include "codegen.h"
 #include "node.h"
+#include "vartable.h"
 #include "operator.h"
 #include "emitter.h"
 #include "utils/memory.h"
 
 struct codegen_t {
-  node_t    *root;
-  int        label_count;
-  int        var_count;
-  char       vars[256][64];
-  int        cur_label_tail;
-  emitter_t *emitter;
+  node_t     *root;
+  int         label_count;
+  vartable_t *vartable;
+  int         cur_label_tail;
+  emitter_t  *emitter;
 };
 
 static void gen(codegen_t *codegen, node_t *node);
@@ -42,12 +42,14 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
+  codegen->vartable = vartable_new(NULL);
   codegen->cur_label_tail = -1;
   codegen->emitter = emitter;
   return codegen;
 }
 
 void codegen_release(codegen_t **pcodegen) {
+  vartable_release(&(*pcodegen)->vartable);
   AK_MEM_FREE(*pcodegen);
   *pcodegen = NULL;
 }
@@ -475,20 +477,11 @@ static int alloc_label_id(codegen_t *codegen) {
 }
 
 static int get_var_index(codegen_t *codegen, const char *name) {
-  int i;
-  for (i = 0; i < codegen->var_count; ++i) {
-    if (strcmp(codegen->vars[i], name) == 0) {
-      return i;
-    }
-  }
-
-  /* register name */
-  return allocate(codegen, name, 1);
+  varentry_t *e = vartable_lookup_or_add_var(codegen->vartable, name);
+  return varentry_get_offset(e);
 }
 
 static int allocate(codegen_t *codegen, const char *name, int size) {
-  int i = codegen->var_count;
-  strcpy(codegen->vars[i], name);
-  codegen->var_count += size;
-  return i;
+  varentry_t *e = vartable_add_var(codegen->vartable, name, size);
+  return varentry_get_offset(e);
 }

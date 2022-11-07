@@ -4,14 +4,14 @@
 #include "utils/memory.h"
 
 struct varentry_t {
-  vartable_t *vartable;
-  int         id;
-  bool        is_local;
-  char       *name;
+  int   offset;
+  bool  is_local;
+  char *name;
 };
 
 struct vartable_t {
   vartable_t  *parent;
+  int          offset;
   int          count;
   int          capacity;
   varentry_t **vars;
@@ -20,6 +20,7 @@ struct vartable_t {
 vartable_t *vartable_new(vartable_t *parent) {
   vartable_t *vartable = (vartable_t *)AK_MEM_MALLOC(sizeof(vartable_t));
   vartable->parent = parent;
+  vartable->offset = 0;
   vartable->count = 0;
   vartable->capacity = 64;
   vartable->vars = (varentry_t **)AK_MEM_CALLOC(vartable->capacity, sizeof(varentry_t *));
@@ -55,8 +56,7 @@ static varentry_t *lookup(vartable_t *vartable, const char *name) {
   return NULL;
 }
 
-varentry_t *vartable_add_var(vartable_t *vartable, const char *name) {
-  int id;
+varentry_t *vartable_add_var(vartable_t *vartable, const char *name, int size) {
   varentry_t *entry = lookup(vartable, name);
 
   if (!entry) {
@@ -65,14 +65,13 @@ varentry_t *vartable_add_var(vartable_t *vartable, const char *name) {
       vartable->vars = (varentry_t **)AK_MEM_REALLOC(vartable->vars, vartable->capacity);
     }
 
-    id = vartable->count++;
     entry = (varentry_t *)AK_MEM_MALLOC(sizeof(varentry_t));
-    entry->vartable = vartable;
-    entry->id = id;
+    entry->offset = vartable->offset;
     entry->is_local = vartable->parent != NULL;
     entry->name = (char *)AK_MEM_CALLOC(strlen(name) + 1, sizeof(char));
     strcpy(entry->name, name);
-    vartable->vars[id] = entry;
+    vartable->vars[vartable->count++] = entry;
+    vartable->offset += size;
   }
 
   return entry;
@@ -89,11 +88,11 @@ varentry_t *vartable_lookup_or_add_var(vartable_t *vartable, const char *name) {
     return vartable_lookup_or_add_var(vartable->parent, name);
   }
 
-  return vartable_add_var(vartable, name);
+  return vartable_add_var(vartable, name, 1);
 }
 
-int varentry_get_id(varentry_t *e) {
-  return e->id;
+int varentry_get_offset(varentry_t *e) {
+  return e->offset;
 }
 
 bool varentry_is_local(varentry_t *e) {
