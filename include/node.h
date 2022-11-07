@@ -14,6 +14,8 @@ typedef enum {
   NT_IDENT,
   NT_VARIABLE,
   NT_ARRAY,
+  NT_FUNC_CALL,
+  NT_FUNC_CALL_ARG,
   NT_IF,
   NT_WHILE,
   NT_BREAK,
@@ -41,6 +43,8 @@ node_t     *node_new_integer(int value);
 node_t     *node_new_ident(const char *name);
 node_t     *node_new_variable(const char *name);
 node_t     *node_new_array(node_t *var, node_t *indexer);
+node_t     *node_new_func_call(node_t *ident, node_t *arg);
+node_t     *node_new_func_call_arg(void);
 node_t     *node_new_if(node_t *cond, node_t *then, node_t *els);
 node_t     *node_new_while(node_t *cond, node_t *body);
 node_t     *node_new_break(void);

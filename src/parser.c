@@ -37,6 +37,7 @@ static node_t *parse_muldiv(parser_t *parser);
 static node_t *parse_atomic(parser_t *parser);
 static node_t *parse_variable(parser_t *parser);
 static node_t *parse_array_indexer(parser_t *parser);
+static node_t *parse_func_call_arg(parser_t *parser);
 static node_t *parse_ident(parser_t *parser);
 static node_t *parse_integer(parser_t *parser);
 
@@ -402,6 +403,10 @@ static node_t *parse_atomic(parser_t *parser) {
     if (is_ttype(parser, TT_LBRACKET)) {
       node = node_new_array(node, parse_array_indexer(parser));
     }
+    else if (is_ttype(parser, TT_LPAREN)) {
+      // TODO: change to NT_IDENT
+      node = node_new_func_call(node, parse_func_call_arg(parser));
+    }
     return node;
   case TT_LPAREN:
     expect(parser, TT_LPAREN);
@@ -434,6 +439,21 @@ static node_t *parse_array_indexer(parser_t *parser) {
   indexer = parse_expr(parser);
   expect(parser, TT_RBRACKET);
   return indexer;
+}
+
+static node_t *parse_func_call_arg(parser_t *parser) {
+  node_t *node = node_new_func_call_arg();
+
+  expect(parser, TT_LPAREN);
+  if (!is_eof(parser) && !is_ttype(parser, TT_RPAREN)) {
+    node_add_child(node, parse_expr(parser));
+    while (is_ttype(parser, TT_COMMA)) {
+      expect(parser, TT_COMMA);
+      node_add_child(node, parse_expr(parser));
+    }
+  }
+  expect(parser, TT_RPAREN);
+  return node;
 }
 
 static node_t *parse_ident(parser_t *parser) {

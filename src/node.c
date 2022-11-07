@@ -122,6 +122,17 @@ node_t *node_new_array(node_t *var, node_t *indexer) {
   return node;
 }
 
+node_t *node_new_func_call(node_t *ident, node_t *arg) {
+  node_t *node = node_new(NT_FUNC_CALL);
+  node_add_child(node, ident);
+  node_add_child(node, arg);
+  return node;
+}
+
+node_t *node_new_func_call_arg(void) {
+  return node_new(NT_FUNC_CALL_ARG);
+}
+
 node_t *node_new_if(node_t *cond, node_t *then, node_t *els) {
   node_t *node = node_new(NT_IF);
   node->cond = cond;
@@ -306,6 +317,17 @@ static void dump_rec(node_t *node, int indent) {
     puts_indent(indent, "Array");
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
+    break;
+  case NT_FUNC_CALL:
+    puts_indent(indent, "FuncCall");
+    dump_rec(node->children[0], indent + 1);
+    dump_rec(node->children[1], indent + 1);
+    break;
+  case NT_FUNC_CALL_ARG:
+    puts_indent(indent, "FuncCallArg");
+    for (int i = 0; i < node->children_count; ++i) {
+      dump_rec(node->children[i], indent + 1);
+    }
     break;
   case NT_IF:
     puts_indent(indent, "If-Statement");
