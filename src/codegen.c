@@ -32,6 +32,7 @@ static void gen_binary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_variable(codegen_t *codegen, node_t *node);
 static void gen_array(codegen_t *codegen, node_t *node);
+static void gen_func_call(codegen_t *codegen, node_t *node);
 static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
@@ -107,6 +108,9 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_ARRAY:
     gen_array(codegen, node);
+    break;
+  case NT_FUNC_CALL:
+    gen_func_call(codegen, node);
     break;
   case NT_HALT:
     emit_halt(emitter);
@@ -433,6 +437,19 @@ static void gen_array(codegen_t *codegen, node_t *node) {
   gen(codegen, node_get_r(node));
   emit_add(emitter);
   emit_load(emitter);
+}
+
+static void gen_func_call(codegen_t *codegen, node_t *node) {
+  emitter_t *emitter = codegen->emitter;
+  node_t *ident = node_get_child(node, 0);
+  node_t *args = node_get_child(node, 1);
+  int arg_count = node_get_child_count(args);
+
+  for (int i = arg_count - 1; i >= 0; --i) {
+    gen(codegen, node_get_child(args, i));
+  }
+  emit_push(emitter, 0); // TODO: call function
+  emit_slide(emitter, arg_count);
 }
 
 static int alloc_label_id(codegen_t *codegen) {
