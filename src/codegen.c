@@ -101,8 +101,6 @@ void codegen_generate(codegen_t *codegen) {
 }
 
 static void gen(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
-
   switch (node_get_ntype(node)) {
   case NT_SEQ:
     codegen->stack_depth = 0;
@@ -192,7 +190,6 @@ static void gen_expr_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_if_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *cond = node_get_cond(node);
   node_t *then = node_get_l(node);
   node_t *els = node_get_r(node);
@@ -220,7 +217,6 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_while_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *cond = node_get_cond(node);
   node_t *body = node_get_l(node);
   int label_head = alloc_label_id(codegen);
@@ -259,7 +255,6 @@ static void gen_puti_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
   emit_inst(codegen, OP_PUSH, var_index);
@@ -267,7 +262,6 @@ static void gen_getc_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_geti_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
   emit_inst(codegen, OP_PUSH, var_index);
@@ -281,7 +275,6 @@ static void gen_array_decl_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_func_statement(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *ident = node_get_child(node, 0);
   node_t *param = node_get_child(node, 1);
   node_t *body = node_get_child(node, 2);
@@ -305,8 +298,6 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
-
   switch (node_get_uop(node)) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
     emit_inst(codegen, OP_PUSH, 0);
@@ -332,8 +323,6 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_binary(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
-
   gen(codegen, node_get_l(node));
   gen(codegen, node_get_r(node));
 
@@ -476,7 +465,6 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_assign(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *lhs = node_get_l(node);
   node_t *expr = node_get_r(node);
 
@@ -511,7 +499,6 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_variable(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *ident = node_get_child(node, 0);
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, node_get_name(ident));
   int offset = varentry_get_offset(varentry);
@@ -526,7 +513,6 @@ static void gen_variable(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_array(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
 
   emit_inst(codegen, OP_PUSH, var_index);
@@ -538,7 +524,6 @@ static void gen_array(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_func_call(codegen_t *codegen, node_t *node) {
-  emitter_t *emitter = codegen->emitter;
   node_t *ident = node_get_child(node, 0);
   node_t *args = node_get_child(node, 1);
   int arg_count = node_get_child_count(args);
