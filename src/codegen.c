@@ -20,6 +20,7 @@ struct codegen_t {
   int         label_count;
   vartable_t *vartable;
   array_t    *funcs;
+  int         cur_label_head;
   int         cur_label_tail;
   int         stack_depth;
   array_t    *insts;
@@ -32,6 +33,7 @@ static void gen_expr_statement(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
+static void gen_continue_statement(codegen_t *codegen, node_t *node);
 static void gen_putc_statement(codegen_t *codegen, node_t *node);
 static void gen_puti_statement(codegen_t *codegen, node_t *node);
 static void gen_getc_statement(codegen_t *codegen, node_t *node);
@@ -56,6 +58,7 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen->label_count = 0;
   codegen->vartable = vartable_new(NULL);
   codegen->funcs = array_new(64);
+  codegen->cur_label_head = -1;
   codegen->cur_label_tail = -1;
   codegen->stack_depth = 0;
   codegen->insts = array_new(256);
@@ -121,6 +124,10 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_BREAK:
     codegen->stack_depth = 0;
     gen_break_statement(codegen, node);
+    break;
+  case NT_CONTINUE:
+    codegen->stack_depth = 0;
+    gen_continue_statement(codegen, node);
     break;
   case NT_GETC:
     codegen->stack_depth = 0;
@@ -224,14 +231,23 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
   node_t *body = node_get_l(node);
   int label_head = alloc_label_id(codegen);
   int label_tail = alloc_label_id(codegen);
+  int label_head_before;
+  int label_tail_before;
 
   emit_inst(codegen, OP_LABEL, label_head);
   gen(codegen, cond);
   emit_inst(codegen, OP_JZ, label_tail);
 
+  label_head_before = codegen->cur_label_head;
+  label_tail_before = codegen->cur_label_tail;
+
+  codegen->cur_label_head = label_head;
   codegen->cur_label_tail = label_tail;
+
   gen(codegen, body);
-  codegen->cur_label_tail = -1;
+
+  codegen->cur_label_head = label_head_before;
+  codegen->cur_label_tail = label_tail_before;
 
   emit_inst(codegen, OP_JMP, label_head);
   emit_inst(codegen, OP_LABEL, label_tail);
@@ -240,7 +256,17 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
 static void gen_break_statement(codegen_t *codegen, node_t *node) {
   int label = codegen->cur_label_tail;
   if (label == -1) {
-    fputs("illegal break statement.", stderr);
+    fputs("error: illegal break statement.", stderr);
+    return;
+  }
+
+  emit_inst(codegen, OP_JMP, label);
+}
+
+static void gen_continue_statement(codegen_t *codegen, node_t *node) {
+  int label = codegen->cur_label_head;
+  if (label == -1) {
+    fputs("error: illegal break statement.", stderr);
     return;
   }
 
