@@ -11,9 +11,9 @@ Akarin is a transpiler from C-like procedural language to Whitespace.
 make
 sudo make install # ofcourse, you can use ./bin/akarin instead without installation
 
-akarin samples/00_basic.txt
-akarin samples/00_basic.txt -s
-akarin samples/00_basic.txt -p
+akarin samples/00_sample.txt
+akarin samples/00_sample.txt -s
+akarin samples/00_sample.txt -p
 ```
 
 ### Input by stdin
@@ -21,40 +21,42 @@ akarin samples/00_basic.txt -p
 Symbolic output:
 
 ```
-$ echo "{ geti n; if (n < 10) { putc 'O'; putc 'K'; } else { putc 'N'; putc 'G'; } putc '\n' }" | akarin -s
-SSSSLTLTTSSSSLTTTSSSTSTSLTSSTLTTTSLSSSSLLSLTTLLSSTSLSSSTLLSSTTLLTSSLSSSTSSTTTTLTLSSSSSTSSTSTTLTLSSLSLTLLSSSLSSSTSSTTTSLTLSSSSSTSSSTTTLTLSSLSSTLSSSSLTLSSSSSTSSSSSLLLL
+$ akarin -s samples/00_sample.txt
+LSTSLLLLLSSSLSSSSLTLTTSSSSLTTTSSSTSTSLTSSTLTTTTLSSSSLLSLTSSLLSSTTLSSSTLLSSTSSLLTSTLSSSTSSTTTTLTLSSSSSTSSTSTTLTLSSLSLTSLLSSTLSSSTSSTTTSLTLSSSSSTSSSTTTLTLSSLSSTSLSSSTSTSLTLSSLTL
 ```
 
 Pseudo-code output:
 
 ```
-$ echo "{ geti n; if (n < 10) { putc 'O'; putc 'K'; } else { putc 'N'; putc 'G'; } putc '\n' }" | akarin -p
+$ akarin -p samples/00_sample.txt
+        CALL L0
+        HALT
+L0:
         PUSH 0
         GETI
         PUSH 0
         LOAD
         PUSH 10
         SUB
-        JNEG L2
+        JNEG L3
         PUSH 0
-        JMP L3
-L2:
-        PUSH 1
+        JMP L4
 L3:
-        JZ L0
+        PUSH 1
+L4:
+        JZ L1
         PUSH 79
         PUTC
         PUSH 75
         PUTC
-        JMP L1
-L0:
+        JMP L2
+L1:
         PUSH 78
         PUTC
         PUSH 71
         PUTC
-L1:
-        PUSH 0
+L2:
+        PUSH 10
         PUTC
-        PUSH 32
-        HALT
+        RET
 ```

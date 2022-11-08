@@ -1,0 +1,10 @@
+func main() {
+  geti n;
+  if (n < 10) {
+    putc 'O'; putc 'K';
+  }
+  else {
+    putc 'N'; putc 'G';
+  }
+  putc '\n';
+}
