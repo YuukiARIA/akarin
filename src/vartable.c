@@ -2,6 +2,7 @@
 #include <string.h>
 #include "vartable.h"
 #include "utils/memory.h"
+#include "utils/array.h"
 
 struct varentry_t {
   int   offset;
@@ -10,33 +11,29 @@ struct varentry_t {
 };
 
 struct vartable_t {
-  vartable_t  *parent;
-  int          offset;
-  int          count;
-  int          capacity;
-  varentry_t **vars;
+  vartable_t *parent;
+  int         offset;
+  array_t    *vars;
 };
 
 vartable_t *vartable_new(vartable_t *parent) {
   vartable_t *vartable = (vartable_t *)AK_MEM_MALLOC(sizeof(vartable_t));
   vartable->parent = parent;
   vartable->offset = 0;
-  vartable->count = 0;
-  vartable->capacity = 64;
-  vartable->vars = (varentry_t **)AK_MEM_CALLOC(vartable->capacity, sizeof(varentry_t *));
+  vartable->vars = array_new(64);
   return vartable;
 }
 
 void vartable_release(vartable_t **pvartable) {
   vartable_t *vt = *pvartable;
 
-  for (int i = 0; i < vt->count; ++i) {
-    varentry_t *e = vt->vars[i];
+  for (int i = 0; i < array_count(vt->vars); ++i) {
+    varentry_t *e = (varentry_t *)array_get(vt->vars, i);
     AK_MEM_FREE(e->name);
     AK_MEM_FREE(e);
   }
+  array_release(&vt->vars);
 
-  AK_MEM_FREE(vt->vars);
   AK_MEM_FREE(vt);
 
   *pvartable = NULL;
@@ -47,8 +44,8 @@ vartable_t *vartable_get_parent(vartable_t *vartable) {
 }
 
 static varentry_t *lookup(vartable_t *vartable, const char *name) {
-  for (int i = 0; i < vartable->count; ++i) {
-    varentry_t *entry = vartable->vars[i];
+  for (int i = 0; i < array_count(vartable->vars); ++i) {
+    varentry_t *entry = (varentry_t *)array_get(vartable->vars, i);
     if (strcmp(entry->name, name) == 0) {
       return entry;
     }
@@ -60,17 +57,13 @@ varentry_t *vartable_add_var(vartable_t *vartable, const char *name, int size) {
   varentry_t *entry = lookup(vartable, name);
 
   if (!entry) {
-    if (vartable->count == vartable->capacity) {
-      vartable->capacity *= 2;
-      vartable->vars = (varentry_t **)AK_MEM_REALLOC(vartable->vars, sizeof(varentry_t *) * vartable->capacity);
-    }
-
     entry = (varentry_t *)AK_MEM_MALLOC(sizeof(varentry_t));
     entry->offset = vartable->offset;
     entry->is_local = vartable->parent != NULL;
     entry->name = (char *)AK_MEM_CALLOC(strlen(name) + 1, sizeof(char));
     strcpy(entry->name, name);
-    vartable->vars[vartable->count++] = entry;
+
+    array_append(vartable->vars, entry);
     vartable->offset += size;
   }
 
