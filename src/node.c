@@ -183,6 +183,12 @@ node_t *node_new_array_decl(node_t *ident, node_t *capacity) {
   return node;
 }
 
+node_t *node_new_return(node_t *expr) {
+  node_t *node = node_new(NT_RETURN);
+  node_add_child(node, expr);
+  return node;
+}
+
 node_t *node_new_halt(void) {
   return node_new(NT_HALT);
 }
@@ -370,6 +376,10 @@ static void dump_rec(node_t *node, int indent) {
     puts_indent(indent, "ArrayDecl-Statement");
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
+    break;
+  case NT_RETURN:
+    puts_indent(indent, "Return");
+    dump_rec(node->children[0], indent + 1);
     break;
   case NT_HALT:
     puts_indent(indent, "Halt-Statement");

@@ -24,6 +24,7 @@ static node_t *parse_putc(parser_t *parser);
 static node_t *parse_geti(parser_t *parser);
 static node_t *parse_getc(parser_t *parser);
 static node_t *parse_array_statement(parser_t *parser);
+static node_t *parse_return_statement(parser_t *parser);
 static node_t *parse_halt_statement(parser_t *parser);
 static node_t *parse_func_statement(parser_t *parser);
 static node_t *parse_expr_statement(parser_t *parser);
@@ -149,6 +150,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_getc(parser);
   case TT_KW_ARRAY:
     return parse_array_statement(parser);
+  case TT_KW_RETURN:
+    return parse_return_statement(parser);
   case TT_KW_HALT:
     return parse_halt_statement(parser);
   case TT_KW_FUNC:
@@ -245,6 +248,17 @@ static node_t *parse_array_statement(parser_t *parser) {
   expect(parser, TT_SEMICOLON);
 
   return node_new_array_decl(ident, capacity);
+}
+
+/*
+ * <<ReturnStatement>> ::= 'return' <<Expr>> ';'
+ */
+static node_t *parse_return_statement(parser_t *parser) {
+  node_t *expr;
+  expect(parser, TT_KW_RETURN);
+  expr = parse_expr(parser);
+  expect(parser, TT_SEMICOLON);
+  return node_new_return(expr);
 }
 
 static node_t *parse_halt_statement(parser_t *parser) {

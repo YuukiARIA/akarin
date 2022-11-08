@@ -24,6 +24,7 @@ typedef enum {
   NT_GETI,
   NT_GETC,
   NT_ARRAY_DECL,
+  NT_RETURN,
   NT_HALT,
   NT_FUNC,
   NT_FUNC_PARAM,
@@ -53,6 +54,7 @@ node_t     *node_new_putc(node_t *expr);
 node_t     *node_new_geti(node_t *var);
 node_t     *node_new_getc(node_t *var);
 node_t     *node_new_array_decl(node_t *ident, node_t *capacity);
+node_t     *node_new_return(node_t *expr);
 node_t     *node_new_halt(void);
 node_t     *node_new_func(node_t *ident, node_t *param, node_t *body);
 node_t     *node_new_func_param(void);
