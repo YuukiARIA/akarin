@@ -1,0 +1,20 @@
+array table[10];
+
+func fib(n) {
+  if (n >= 0) {
+    if (n == 0 | n == 1) {
+      table[n] = n;
+    }
+    else if (table[n] == 0) {
+      table[n] = fib(n - 2) + fib(n - 1);
+    }
+    return table[n];
+  }
+
+  return 0;
+}
+
+func main() {
+  puti fib(9);
+  return 0;
+}
