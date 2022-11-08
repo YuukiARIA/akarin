@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include "operator.h"
 
 typedef enum {
@@ -73,5 +74,7 @@ node_t     *node_get_l(node_t *node);
 node_t     *node_get_r(node_t *node);
 node_t     *node_get_cond(node_t *node);
 int         node_is_assignable(node_t *node);
+
+bool        node_is_all_paths_ended_with_return(node_t *node);
 
 void        node_dump_tree(node_t *node);

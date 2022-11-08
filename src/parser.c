@@ -297,6 +297,11 @@ static node_t *parse_func_statement(parser_t *parser) {
   expect(parser, TT_RPAREN);
   body = parse_block(parser);
 
+  if (!node_is_all_paths_ended_with_return(body)) {
+    fprintf(stderr, "error: function '%s' has code path(s) not returning a value.\n", node_get_name(ident));
+    ++parser->error_count;
+  }
+
   return node_new_func(ident, param, body);
 }
 
