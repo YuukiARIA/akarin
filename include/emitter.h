@@ -1,5 +1,7 @@
 #pragma once
 
+#include "inst.h"
+
 typedef struct emitter_t emitter_t;
 
 struct emitter_t {
@@ -32,6 +34,7 @@ struct emitter_t {
 
 void emitter_release(emitter_t **pemitter);
 
+void emit(emitter_t *emitter, inst_t *inst);
 void emit_push(emitter_t *emitter, int value);
 void emit_copy(emitter_t *emitter, int n);
 void emit_slide(emitter_t *emitter, int n);
