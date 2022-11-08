@@ -74,8 +74,13 @@ void codegen_release(codegen_t **pcodegen) {
 }
 
 void codegen_generate(codegen_t *codegen) {
-  gen(codegen, codegen->root);
+  func_def_t *func_main = register_func(codegen, "main");
+
+  emit_call(codegen->emitter, func_main->label);
   emit_halt(codegen->emitter);
+
+  gen(codegen, codegen->root);
+
   emit_end(codegen->emitter);
 }
 

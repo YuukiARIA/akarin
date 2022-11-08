@@ -1,6 +1,6 @@
 # Print prime numbers up to 50.
 
-{
+func main() {
   array np[50];
 
   i = 3;

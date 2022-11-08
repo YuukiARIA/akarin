@@ -1,6 +1,6 @@
 # Calculate square numbers up to n.
 
-{
+func main() {
   geti n;
 
   sum = 0;

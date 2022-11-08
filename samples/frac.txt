@@ -1,6 +1,6 @@
 # Print digits of fraction a/b.
 
-{
+func main() {
   geti a;
   geti b;
 
