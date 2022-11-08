@@ -16,7 +16,7 @@ akarin samples/00_sample.txt -s
 akarin samples/00_sample.txt -p
 ```
 
-### Input by stdin
+### Output mode
 
 Symbolic output:
 
