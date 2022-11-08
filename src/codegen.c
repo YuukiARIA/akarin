@@ -21,6 +21,7 @@ struct codegen_t {
   vartable_t *vartable;
   array_t    *funcs;
   int         cur_label_tail;
+  int         stack_depth;
   array_t    *insts;
   emitter_t  *emitter;
 };
@@ -56,6 +57,7 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen->vartable = vartable_new(NULL);
   codegen->funcs = array_new(64);
   codegen->cur_label_tail = -1;
+  codegen->stack_depth = 0;
   codegen->insts = array_new(256);
   codegen->emitter = emitter;
   return codegen;
@@ -269,10 +271,22 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
   node_t *param = node_get_child(node, 1);
   node_t *body = node_get_child(node, 2);
   func_def_t *func = register_func(codegen, node_get_name(ident));
+  vartable_t *vartable_local = vartable_new(codegen->vartable);
+
+  for (int i = 0; i < node_get_child_count(param); ++i) {
+    node_t *param_ident = node_get_child(param, i);
+    vartable_add_var(vartable_local, node_get_name(param_ident), 1);
+  }
+
+  codegen->vartable = vartable_local;
 
   emit_inst(codegen, OP_LABEL, func->label);
   gen(codegen, body);
+  emit_inst(codegen, OP_PUSH, 0); /* TODO: return value */
   emit_inst(codegen, OP_RET, 0);
+
+  codegen->vartable = vartable_get_parent(vartable_local);
+  vartable_release(&vartable_local);
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
@@ -481,10 +495,16 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 static void gen_variable(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
   node_t *ident = node_get_child(node, 0);
-  int var_index = get_var_index(codegen, node_get_name(ident));
+  varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, node_get_name(ident));
+  int offset = varentry_get_offset(varentry);
 
-  emit_inst(codegen, OP_PUSH, var_index);
-  emit_inst(codegen, OP_LOAD, 0);
+  if (varentry_is_local(varentry)) {
+    emit_inst(codegen, OP_COPY, codegen->stack_depth + offset);
+  }
+  else {
+    emit_inst(codegen, OP_PUSH, offset);
+    emit_inst(codegen, OP_LOAD, 0);
+  }
 }
 
 static void gen_array(codegen_t *codegen, node_t *node) {
@@ -512,7 +532,9 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
 }
 
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
-  array_append(codegen->insts, inst_new(opcode, operand));
+  inst_t *inst = inst_new(opcode, operand);
+  array_append(codegen->insts, inst);
+  codegen->stack_depth += inst_stack_size(inst);
 }
 
 static int alloc_label_id(codegen_t *codegen) {
