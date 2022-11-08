@@ -5,6 +5,7 @@
 #include "node.h"
 #include "vartable.h"
 #include "operator.h"
+#include "inst.h"
 #include "emitter.h"
 #include "utils/memory.h"
 #include "utils/array.h"
@@ -20,6 +21,7 @@ struct codegen_t {
   vartable_t *vartable;
   array_t    *funcs;
   int         cur_label_tail;
+  array_t    *insts;
   emitter_t  *emitter;
 };
 
@@ -53,6 +55,7 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen->vartable = vartable_new(NULL);
   codegen->funcs = array_new(64);
   codegen->cur_label_tail = -1;
+  codegen->insts = array_new(256);
   codegen->emitter = emitter;
   return codegen;
 }
@@ -68,6 +71,12 @@ void codegen_release(codegen_t **pcodegen) {
     AK_MEM_FREE(f);
   }
   array_release(&c->funcs);
+
+  for (int i = 0; i < array_count(c->insts); ++i) {
+    inst_t *inst = (inst_t *)array_get(c->insts, i);
+    AK_MEM_FREE(inst);
+  }
+  array_release(&c->insts);
 
   AK_MEM_FREE(c);
   *pcodegen = NULL;
