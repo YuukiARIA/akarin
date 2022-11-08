@@ -1,0 +1,7 @@
+func main() {
+  geti a;
+  geti b;
+  puti a + b;
+  putc '\n';
+  return 0;
+}

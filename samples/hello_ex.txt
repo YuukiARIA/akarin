@@ -1,0 +1,9 @@
+func main() {
+  i = -2;
+  while (i <= 2) {
+    putc 76 + (((27 * i - 14) * i - 111) * i + 98) * i / 24;
+    i = i + 1;
+  }
+  putc '\n';
+  return 0;
+}
