@@ -34,4 +34,3 @@ typedef struct {
 
 inst_t *inst_new(opcode_t opcode, int operand);
 void    inst_release(inst_t **pinst);
-int     inst_stack_size(inst_t *inst);

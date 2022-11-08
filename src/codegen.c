@@ -105,36 +105,47 @@ static void gen(codegen_t *codegen, node_t *node) {
 
   switch (node_get_ntype(node)) {
   case NT_SEQ:
+    codegen->stack_depth = 0;
     gen_sequence(codegen, node);
     break;
   case NT_EXPR:
+    codegen->stack_depth = 0;
     gen_expr_statement(codegen, node_get_l(node));
     break;
   case NT_IF:
+    codegen->stack_depth = 0;
     gen_if_statement(codegen, node);
     break;
   case NT_WHILE:
+    codegen->stack_depth = 0;
     gen_while_statement(codegen, node);
     break;
   case NT_BREAK:
+    codegen->stack_depth = 0;
     gen_break_statement(codegen, node);
     break;
   case NT_GETC:
+    codegen->stack_depth = 0;
     gen_getc_statement(codegen, node);
     break;
   case NT_GETI:
+    codegen->stack_depth = 0;
     gen_geti_statement(codegen, node);
     break;
   case NT_PUTC:
+    codegen->stack_depth = 0;
     gen_putc_statement(codegen, node);
     break;
   case NT_PUTI:
+    codegen->stack_depth = 0;
     gen_puti_statement(codegen, node);
     break;
   case NT_ARRAY_DECL:
+    codegen->stack_depth = 0;
     gen_array_decl_statement(codegen, node);
     break;
   case NT_FUNC:
+    codegen->stack_depth = 0;
     gen_func_statement(codegen, node);
     break;
   case NT_UNARY:
@@ -142,21 +153,27 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_BINARY:
     gen_binary(codegen, node);
+    codegen->stack_depth--;
     break;
   case NT_ASSIGN:
     gen_assign(codegen, node);
+    codegen->stack_depth++;
     break;
   case NT_INTEGER:
     emit_inst(codegen, OP_PUSH, node_get_value(node));
+    codegen->stack_depth++;
     break;
   case NT_VARIABLE:
     gen_variable(codegen, node);
+    codegen->stack_depth++;
     break;
   case NT_ARRAY:
     gen_array(codegen, node);
+    codegen->stack_depth++;
     break;
   case NT_FUNC_CALL:
     gen_func_call(codegen, node);
+    codegen->stack_depth++;
     break;
   case NT_HALT:
     emit_inst(codegen, OP_HALT, 0);
@@ -532,9 +549,7 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
 }
 
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
-  inst_t *inst = inst_new(opcode, operand);
-  array_append(codegen->insts, inst);
-  codegen->stack_depth += inst_stack_size(inst);
+  array_append(codegen->insts, inst_new(opcode, operand));
 }
 
 static int alloc_label_id(codegen_t *codegen) {
