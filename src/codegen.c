@@ -173,7 +173,6 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_FUNC_CALL:
     gen_func_call(codegen, node);
-    codegen->stack_depth++;
     break;
   case NT_HALT:
     emit_inst(codegen, OP_HALT, 0);
@@ -573,7 +572,9 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
     gen(codegen, node_get_child(args, i));
   }
   emit_inst(codegen, OP_CALL, func->label);
+  codegen->stack_depth++;
   emit_inst(codegen, OP_SLIDE, arg_count);
+  codegen->stack_depth -= arg_count;
 }
 
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
