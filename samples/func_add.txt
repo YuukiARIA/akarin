@@ -1,0 +1,34 @@
+func add(a, b) {
+  return a + b;
+}
+
+func even(x) {
+  if (x % 2 == 0) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+func nl() {
+  putc 10;
+  return 0;
+}
+
+func tf(x) {
+  if (x) {
+    putc 't'; putc 'r'; putc 'u'; putc 'e';
+  }
+  else {
+    putc 'f'; putc 'a'; putc 'l'; putc 's'; putc 'e';
+  }
+  return 0;
+}
+
+func main() {
+  puti add(5, 7); nl();
+  tf(even(7)); nl();
+  tf(even(8)); nl();
+  return 0;
+}
