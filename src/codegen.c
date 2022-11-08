@@ -157,7 +157,6 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_ASSIGN:
     gen_assign(codegen, node);
-    codegen->stack_depth++;
     break;
   case NT_INTEGER:
     emit_inst(codegen, OP_PUSH, node_get_value(node));
@@ -169,7 +168,6 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_ARRAY:
     gen_array(codegen, node);
-    codegen->stack_depth++;
     break;
   case NT_FUNC_CALL:
     gen_func_call(codegen, node);
@@ -496,8 +494,10 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
       emit_inst(codegen, OP_PUSH, var_index);
+      codegen->stack_depth++;
       gen(codegen, node_get_r(lhs));
       emit_inst(codegen, OP_ADD, 0);
+      codegen->stack_depth--;
     }
     break;
   default:
@@ -507,6 +507,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 
   emit_inst(codegen, OP_COPY, 1);
   emit_inst(codegen, OP_STORE, 0);
+  codegen->stack_depth++;
 }
 
 static void gen_variable(codegen_t *codegen, node_t *node) {
@@ -529,9 +530,11 @@ static void gen_array(codegen_t *codegen, node_t *node) {
   int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
 
   emit_inst(codegen, OP_PUSH, var_index);
+  codegen->stack_depth++;
   gen(codegen, node_get_r(node));
   emit_inst(codegen, OP_ADD, 0);
   emit_inst(codegen, OP_LOAD, 0);
+  codegen->stack_depth--;
 }
 
 static void gen_func_call(codegen_t *codegen, node_t *node) {
