@@ -35,6 +35,7 @@ const char *ttype_to_string(ttype_t ttype) {
     CASE_RETURN(TT_KW_ELSE);
     CASE_RETURN(TT_KW_WHILE);
     CASE_RETURN(TT_KW_BREAK);
+    CASE_RETURN(TT_KW_CONTINUE);
     CASE_RETURN(TT_KW_PUTI);
     CASE_RETURN(TT_KW_PUTC);
     CASE_RETURN(TT_KW_GETI);

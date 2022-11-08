@@ -37,6 +37,7 @@ typedef enum {
   TT_KW_ELSE,
   TT_KW_WHILE,
   TT_KW_BREAK,
+  TT_KW_CONTINUE,
   TT_KW_PUTI,
   TT_KW_PUTC,
   TT_KW_GETI,
