@@ -7,4 +7,6 @@ func main() {
     putc 'N'; putc 'G';
   }
   putc '\n';
+
+  return 0;
 }
