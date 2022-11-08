@@ -38,6 +38,7 @@ static void gen_getc_statement(codegen_t *codegen, node_t *node);
 static void gen_geti_statement(codegen_t *codegen, node_t *node);
 static void gen_array_decl_statement(codegen_t *codegen, node_t *node);
 static void gen_func_statement(codegen_t *codegen, node_t *node);
+static void gen_return_statement(codegen_t *codegen, node_t *node);
 static void gen_unary(codegen_t *codegen, node_t *node);
 static void gen_binary(codegen_t *codegen, node_t *node);
 static void gen_assign(codegen_t *codegen, node_t *node);
@@ -144,6 +145,10 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_FUNC:
     codegen->stack_depth = 0;
     gen_func_statement(codegen, node);
+    break;
+  case NT_RETURN:
+    codegen->stack_depth = 0;
+    gen_return_statement(codegen, node);
     break;
   case NT_UNARY:
     gen_unary(codegen, node);
@@ -303,11 +308,15 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
 
   emit_inst(codegen, OP_LABEL, func->label);
   gen(codegen, body);
-  emit_inst(codegen, OP_PUSH, 0); /* TODO: return value */
-  emit_inst(codegen, OP_RET, 0);
 
   codegen->vartable = vartable_get_parent(vartable_local);
   vartable_release(&vartable_local);
+}
+
+static void gen_return_statement(codegen_t *codegen, node_t *node) {
+  node_t *expr = node_get_child(node, 0);
+  gen(codegen, expr);
+  emit_inst(codegen, OP_RET, 0);
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
