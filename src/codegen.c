@@ -46,7 +46,6 @@ static void gen_array(codegen_t *codegen, node_t *node);
 static void gen_func_call(codegen_t *codegen, node_t *node);
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand);
 static int  alloc_label_id(codegen_t *codegen);
-static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
 static func_def_t *register_func(codegen_t *codegen, const char *name);
 
@@ -255,16 +254,30 @@ static void gen_puti_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
-  node_t *var = node_get_l(node);
-  int var_index = get_var_index(codegen, node_get_name(var));
-  emit_inst(codegen, OP_PUSH, var_index);
+  node_t *ident = node_get_l(node);
+  const char *name = node_get_name(ident);
+  varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+
+  if (varentry_is_local(varentry)) {
+    fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+    return;
+  }
+
+  emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
   emit_inst(codegen, OP_GETC, 0);
 }
 
 static void gen_geti_statement(codegen_t *codegen, node_t *node) {
-  node_t *var = node_get_l(node);
-  int var_index = get_var_index(codegen, node_get_name(var));
-  emit_inst(codegen, OP_PUSH, var_index);
+  node_t *ident = node_get_l(node);
+  const char *name = node_get_name(ident);
+  varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+
+  if (varentry_is_local(varentry)) {
+    fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+    return;
+  }
+
+  emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
   emit_inst(codegen, OP_GETI, 0);
 }
 
@@ -474,14 +487,25 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   case NT_VARIABLE:
     {
       node_t *ident = node_get_child(lhs, 0);
-      int var_index = get_var_index(codegen, node_get_name(ident));
-      emit_inst(codegen, OP_PUSH, var_index);
+      const char *name = node_get_name(ident);
+      varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+      if (varentry_is_local(varentry)) {
+	fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+	return;
+      }
+      emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
     }
     break;
   case NT_ARRAY:
     {
-      int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
-      emit_inst(codegen, OP_PUSH, var_index);
+      node_t *ident = node_get_l(lhs);
+      const char *name = node_get_name(ident);
+      varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+      if (varentry_is_local(varentry)) {
+	fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+	return;
+      }
+      emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
       codegen->stack_depth++;
       gen(codegen, node_get_r(lhs));
       emit_inst(codegen, OP_ADD, 0);
@@ -513,9 +537,16 @@ static void gen_variable(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_array(codegen_t *codegen, node_t *node) {
-  int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
+  node_t *ident = node_get_l(node);
+  const char *name = node_get_name(ident);
+  varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
-  emit_inst(codegen, OP_PUSH, var_index);
+  if (varentry_is_local(varentry)) {
+    fprintf(stderr, "error: function parameter '%s' is not array.\n", name);
+    return;
+  }
+
+  emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
   codegen->stack_depth++;
   gen(codegen, node_get_r(node));
   emit_inst(codegen, OP_ADD, 0);
@@ -542,11 +573,6 @@ static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
 
 static int alloc_label_id(codegen_t *codegen) {
   return codegen->label_count++;
-}
-
-static int get_var_index(codegen_t *codegen, const char *name) {
-  varentry_t *e = vartable_lookup_or_add_var(codegen->vartable, name);
-  return varentry_get_offset(e);
 }
 
 static int allocate(codegen_t *codegen, const char *name, int size) {
