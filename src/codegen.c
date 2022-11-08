@@ -43,6 +43,7 @@ static void gen_assign(codegen_t *codegen, node_t *node);
 static void gen_variable(codegen_t *codegen, node_t *node);
 static void gen_array(codegen_t *codegen, node_t *node);
 static void gen_func_call(codegen_t *codegen, node_t *node);
+static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand);
 static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
@@ -85,11 +86,15 @@ void codegen_release(codegen_t **pcodegen) {
 void codegen_generate(codegen_t *codegen) {
   func_def_t *func_main = register_func(codegen, "main");
 
-  emit_call(codegen->emitter, func_main->label);
-  emit_halt(codegen->emitter);
+  emit_inst(codegen, OP_CALL, func_main->label);
+  emit_inst(codegen, OP_HALT, 0);
 
   gen(codegen, codegen->root);
 
+  for (int i = 0; i < array_count(codegen->insts); ++i) {
+    inst_t *inst = (inst_t *)array_get(codegen->insts, i);
+    emit(codegen->emitter, inst);
+  }
   emit_end(codegen->emitter);
 }
 
@@ -140,7 +145,7 @@ static void gen(codegen_t *codegen, node_t *node) {
     gen_assign(codegen, node);
     break;
   case NT_INTEGER:
-    emit_push(emitter, node_get_value(node));
+    emit_inst(codegen, OP_PUSH, node_get_value(node));
     break;
   case NT_VARIABLE:
     gen_variable(codegen, node);
@@ -152,7 +157,7 @@ static void gen(codegen_t *codegen, node_t *node) {
     gen_func_call(codegen, node);
     break;
   case NT_HALT:
-    emit_halt(emitter);
+    emit_inst(codegen, OP_HALT, 0);
     break;
   default:
     break;
@@ -166,7 +171,7 @@ static void gen_sequence(codegen_t *codegen, node_t *node) {
 
 static void gen_expr_statement(codegen_t *codegen, node_t *node) {
   gen(codegen, node);
-  emit_pop(codegen->emitter);
+  emit_inst(codegen, OP_POP, 0);
 }
 
 static void gen_if_statement(codegen_t *codegen, node_t *node) {
@@ -180,20 +185,20 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
     int l2 = alloc_label_id(codegen);
 
     gen(codegen, cond);
-    emit_jz(emitter, l1);
+    emit_inst(codegen, OP_JZ, l1);
     gen(codegen, then);
-    emit_jmp(emitter, l2);
-    emit_label(emitter, l1);
+    emit_inst(codegen, OP_JMP, l2);
+    emit_inst(codegen, OP_LABEL, l1);
     gen(codegen, els);
-    emit_label(emitter, l2);
+    emit_inst(codegen, OP_LABEL, l2);
   }
   else {
     int l = alloc_label_id(codegen);
 
     gen(codegen, cond);
-    emit_jz(emitter, l);
+    emit_inst(codegen, OP_JZ, l);
     gen(codegen, then);
-    emit_label(emitter, l);
+    emit_inst(codegen, OP_LABEL, l);
   }
 }
 
@@ -204,16 +209,16 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
   int label_head = alloc_label_id(codegen);
   int label_tail = alloc_label_id(codegen);
 
-  emit_label(emitter, label_head);
+  emit_inst(codegen, OP_LABEL, label_head);
   gen(codegen, cond);
-  emit_jz(emitter, label_tail);
+  emit_inst(codegen, OP_JZ, label_tail);
 
   codegen->cur_label_tail = label_tail;
   gen(codegen, body);
   codegen->cur_label_tail = -1;
 
-  emit_jmp(emitter, label_head);
-  emit_label(emitter, label_tail);
+  emit_inst(codegen, OP_JMP, label_head);
+  emit_inst(codegen, OP_LABEL, label_tail);
 }
 
 static void gen_break_statement(codegen_t *codegen, node_t *node) {
@@ -223,33 +228,33 @@ static void gen_break_statement(codegen_t *codegen, node_t *node) {
     return;
   }
 
-  emit_jmp(codegen->emitter, label);
+  emit_inst(codegen, OP_JMP, label);
 }
 
 static void gen_putc_statement(codegen_t *codegen, node_t *node) {
   gen(codegen, node_get_l(node));
-  emit_putc(codegen->emitter);
+  emit_inst(codegen, OP_PUTC, 0);
 }
 
 static void gen_puti_statement(codegen_t *codegen, node_t *node) {
   gen(codegen, node_get_l(node));
-  emit_puti(codegen->emitter);
+  emit_inst(codegen, OP_PUTI, 0);
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
-  emit_push(emitter, var_index);
-  emit_getc(emitter);
+  emit_inst(codegen, OP_PUSH, var_index);
+  emit_inst(codegen, OP_GETC, 0);
 }
 
 static void gen_geti_statement(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
   node_t *var = node_get_l(node);
   int var_index = get_var_index(codegen, node_get_name(var));
-  emit_push(emitter, var_index);
-  emit_geti(emitter);
+  emit_inst(codegen, OP_PUSH, var_index);
+  emit_inst(codegen, OP_GETI, 0);
 }
 
 static void gen_array_decl_statement(codegen_t *codegen, node_t *node) {
@@ -265,9 +270,9 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
   node_t *body = node_get_child(node, 2);
   func_def_t *func = register_func(codegen, node_get_name(ident));
 
-  emit_label(emitter, func->label);
+  emit_inst(codegen, OP_LABEL, func->label);
   gen(codegen, body);
-  emit_ret(emitter);
+  emit_inst(codegen, OP_RET, 0);
 }
 
 static void gen_unary(codegen_t *codegen, node_t *node) {
@@ -275,21 +280,21 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 
   switch (node_get_uop(node)) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
-    emit_push(emitter, 0);
+    emit_inst(codegen, OP_PUSH, 0);
     gen(codegen, node_get_l(node));
-    emit_sub(emitter);
+    emit_inst(codegen, OP_SUB, 0);
     break;
   case UOP_NOT:
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
       gen(codegen, node_get_l(node));
-      emit_jz(emitter, l1);
-      emit_push(emitter, 0);
-      emit_jmp(emitter, l2);
-      emit_label(emitter, l1);
-      emit_push(emitter, 1);
-      emit_label(emitter, l2);
+      emit_inst(codegen, OP_JZ, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   default:
@@ -305,36 +310,36 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
 
   switch (node_get_bop(node)) {
   case BOP_ADD:
-    emit_add(emitter);
+    emit_inst(codegen, OP_ADD, 0);
     break;
   case BOP_SUB:
-    emit_sub(emitter);
+    emit_inst(codegen, OP_SUB, 0);
     break;
   case BOP_MUL:
-    emit_mul(emitter);
+    emit_inst(codegen, OP_MUL, 0);
     break;
   case BOP_DIV:
-    emit_div(emitter);
+    emit_inst(codegen, OP_DIV, 0);
     break;
   case BOP_MOD:
-    emit_mod(emitter);
+    emit_inst(codegen, OP_MOD, 0);
     break;
   case BOP_OR:
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
       int l3 = alloc_label_id(codegen);
-      emit_jz(emitter, l1);
-      emit_pop(emitter);
-      emit_push(emitter, 1);
-      emit_jmp(emitter, l3);
-      emit_label(emitter, l1);
-      emit_jz(emitter, l2);
-      emit_push(emitter, 1);
-      emit_jmp(emitter, l3);
-      emit_label(emitter, l2);
-      emit_push(emitter, 0);
-      emit_label(emitter, l3);
+      emit_inst(codegen, OP_JZ, l1);
+      emit_inst(codegen, OP_POP, 0);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_JMP, l3);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_JZ, l2);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_JMP, l3);
+      emit_inst(codegen, OP_LABEL, l2);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_LABEL, l3);
     }
     break;
   case BOP_AND:
@@ -343,97 +348,97 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
       int l2 = alloc_label_id(codegen);
       int l3 = alloc_label_id(codegen);
       int l4 = alloc_label_id(codegen);
-      emit_jz(emitter, l1);
-      emit_jz(emitter, l2);
-      emit_jmp(emitter, l3);
-      emit_label(emitter, l1);
-      emit_pop(emitter);
-      emit_label(emitter, l2);
-      emit_push(emitter, 0);
-      emit_jmp(emitter, l4);
-      emit_label(emitter, l3);
-      emit_push(emitter, 1);
-      emit_label(emitter, l4);
+      emit_inst(codegen, OP_JZ, l1);
+      emit_inst(codegen, OP_JZ, l2);
+      emit_inst(codegen, OP_JMP, l3);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_POP, 0);
+      emit_inst(codegen, OP_LABEL, l2);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_JMP, l4);
+      emit_inst(codegen, OP_LABEL, l3);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_LABEL, l4);
     }
     break;
   case BOP_EQ:
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_sub(emitter);       /* SUB */
-      emit_jz(emitter, l1);      /* JZ L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JZ, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   case BOP_NEQ:
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_sub(emitter);       /* SUB */
-      emit_jz(emitter, l1);      /* JZ L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JZ, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   case BOP_LT: /* x < y --> x - y < 0 */
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_sub(emitter);       /* SUB */
-      emit_jneg(emitter, l1);    /* JNEG L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JNEG, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   case BOP_LE: /* x <= y --> !(y - x < 0) */
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_swap(emitter);      /* SWAP */
-      emit_sub(emitter);       /* SUB */
-      emit_jneg(emitter, l1);    /* JNEG L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SWAP, 0);
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JNEG, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   case BOP_GT: /* x > y --> y - x < 0 */
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_swap(emitter);      /* SWAP */
-      emit_sub(emitter);       /* SUB */
-      emit_jneg(emitter, l1);    /* JNEG L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SWAP, 0);
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JNEG, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   case BOP_GE: /* x >= y --> !(x - y < 0) */
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      emit_sub(emitter);       /* SUB */
-      emit_jneg(emitter, l1);    /* JNEG L1 */
-      emit_push(emitter, 1);     /* PUSH 1 */
-      emit_jmp(emitter, l2);     /* JMP L2 */
-      emit_label(emitter, l1);   /* :L1 */
-      emit_push(emitter, 0);     /* PUSH 0 */
-      emit_label(emitter, l2);   /* :L2 */
+      emit_inst(codegen, OP_SUB, 0);
+      emit_inst(codegen, OP_JNEG, l1);
+      emit_inst(codegen, OP_PUSH, 1);
+      emit_inst(codegen, OP_JMP, l2);
+      emit_inst(codegen, OP_LABEL, l1);
+      emit_inst(codegen, OP_PUSH, 0);
+      emit_inst(codegen, OP_LABEL, l2);
     }
     break;
   default:
@@ -453,15 +458,15 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     {
       node_t *ident = node_get_child(lhs, 0);
       int var_index = get_var_index(codegen, node_get_name(ident));
-      emit_push(emitter, var_index);
+      emit_inst(codegen, OP_PUSH, var_index);
     }
     break;
   case NT_ARRAY:
     {
       int var_index = get_var_index(codegen, node_get_name(node_get_l(lhs)));
-      emit_push(emitter, var_index);
+      emit_inst(codegen, OP_PUSH, var_index);
       gen(codegen, node_get_r(lhs));
-      emit_add(emitter);
+      emit_inst(codegen, OP_ADD, 0);
     }
     break;
   default:
@@ -469,8 +474,8 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     return;
   }
 
-  emit_copy(emitter, 1);
-  emit_store(emitter);
+  emit_inst(codegen, OP_COPY, 1);
+  emit_inst(codegen, OP_STORE, 0);
 }
 
 static void gen_variable(codegen_t *codegen, node_t *node) {
@@ -478,18 +483,18 @@ static void gen_variable(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
   int var_index = get_var_index(codegen, node_get_name(ident));
 
-  emit_push(emitter, var_index);
-  emit_load(emitter);
+  emit_inst(codegen, OP_PUSH, var_index);
+  emit_inst(codegen, OP_LOAD, 0);
 }
 
 static void gen_array(codegen_t *codegen, node_t *node) {
   emitter_t *emitter = codegen->emitter;
   int var_index = get_var_index(codegen, node_get_name(node_get_l(node)));
 
-  emit_push(emitter, var_index);
+  emit_inst(codegen, OP_PUSH, var_index);
   gen(codegen, node_get_r(node));
-  emit_add(emitter);
-  emit_load(emitter);
+  emit_inst(codegen, OP_ADD, 0);
+  emit_inst(codegen, OP_LOAD, 0);
 }
 
 static void gen_func_call(codegen_t *codegen, node_t *node) {
@@ -502,8 +507,12 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
   for (int i = arg_count - 1; i >= 0; --i) {
     gen(codegen, node_get_child(args, i));
   }
-  emit_call(emitter, func->label);
-  emit_slide(emitter, arg_count);
+  emit_inst(codegen, OP_CALL, func->label);
+  emit_inst(codegen, OP_SLIDE, arg_count);
+}
+
+static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
+  array_append(codegen->insts, inst_new(opcode, operand));
 }
 
 static int alloc_label_id(codegen_t *codegen) {
