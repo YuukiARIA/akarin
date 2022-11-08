@@ -62,7 +62,7 @@ varentry_t *vartable_add_var(vartable_t *vartable, const char *name, int size) {
   if (!entry) {
     if (vartable->count == vartable->capacity) {
       vartable->capacity *= 2;
-      vartable->vars = (varentry_t **)AK_MEM_REALLOC(vartable->vars, vartable->capacity);
+      vartable->vars = (varentry_t **)AK_MEM_REALLOC(vartable->vars, sizeof(varentry_t *) * vartable->capacity);
     }
 
     entry = (varentry_t *)AK_MEM_MALLOC(sizeof(varentry_t));
