@@ -35,32 +35,6 @@ struct emitter_t {
 void emitter_release(emitter_t **pemitter);
 
 void emit(emitter_t *emitter, inst_t *inst);
-void emit_push(emitter_t *emitter, int value);
-void emit_copy(emitter_t *emitter, int n);
-void emit_slide(emitter_t *emitter, int n);
-void emit_dup(emitter_t *emitter);
-void emit_pop(emitter_t *emitter);
-void emit_swap(emitter_t *emitter);
-void emit_add(emitter_t *emitter);
-void emit_sub(emitter_t *emitter);
-void emit_mul(emitter_t *emitter);
-void emit_div(emitter_t *emitter);
-void emit_mod(emitter_t *emitter);
-void emit_store(emitter_t *emitter);
-void emit_load(emitter_t *emitter);
-void emit_getc(emitter_t *emitter);
-void emit_geti(emitter_t *emitter);
-void emit_putc(emitter_t *emitter);
-void emit_puti(emitter_t *emitter);
-void emit_store(emitter_t *emitter);
-void emit_load(emitter_t *emitter);
-void emit_label(emitter_t *emitter, int label);
-void emit_call(emitter_t *emitter, int label);
-void emit_jmp(emitter_t *emitter, int label);
-void emit_jz(emitter_t *emitter, int label);
-void emit_jneg(emitter_t *emitter, int label);
-void emit_ret(emitter_t *emittter);
-void emit_halt(emitter_t *emitter);
 void emit_end(emitter_t *emitter);
 
 #define EMITTER_OVERRIDE_ONE(OBJ, PREFIX, INST) (OBJ).INST = PREFIX ## _ ## INST
