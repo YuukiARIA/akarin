@@ -7,11 +7,18 @@
 #include "operator.h"
 #include "emitter.h"
 #include "utils/memory.h"
+#include "utils/array.h"
+
+typedef struct {
+  char *name;
+  int   label;
+} func_def_t;
 
 struct codegen_t {
   node_t     *root;
   int         label_count;
   vartable_t *vartable;
+  array_t    *funcs;
   int         cur_label_tail;
   emitter_t  *emitter;
 };
@@ -37,20 +44,32 @@ static void gen_func_call(codegen_t *codegen, node_t *node);
 static int  alloc_label_id(codegen_t *codegen);
 static int  get_var_index(codegen_t *codegen, const char *name);
 static int  allocate(codegen_t *codegen, const char *name, int size);
+static func_def_t *register_func(codegen_t *codegen, const char *name);
 
 codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
   codegen->vartable = vartable_new(NULL);
+  codegen->funcs = array_new(64);
   codegen->cur_label_tail = -1;
   codegen->emitter = emitter;
   return codegen;
 }
 
 void codegen_release(codegen_t **pcodegen) {
-  vartable_release(&(*pcodegen)->vartable);
-  AK_MEM_FREE(*pcodegen);
+  codegen_t *c = *pcodegen;
+
+  vartable_release(&c->vartable);
+
+  for (int i = 0; i < array_count(c->funcs); ++i) {
+    func_def_t *f = (func_def_t *)array_get(c->funcs, i);
+    AK_MEM_FREE(f->name);
+    AK_MEM_FREE(f);
+  }
+  array_release(&c->funcs);
+
+  AK_MEM_FREE(c);
   *pcodegen = NULL;
 }
 
@@ -230,9 +249,9 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
   node_t *param = node_get_child(node, 1);
   node_t *body = node_get_child(node, 2);
-  int label = alloc_label_id(codegen);
+  func_def_t *func = register_func(codegen, node_get_name(ident));
 
-  emit_label(emitter, label);
+  emit_label(emitter, func->label);
   gen(codegen, body);
   emit_ret(emitter);
 }
@@ -464,11 +483,12 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
   node_t *args = node_get_child(node, 1);
   int arg_count = node_get_child_count(args);
+  func_def_t *func = register_func(codegen, node_get_name(ident));
 
   for (int i = arg_count - 1; i >= 0; --i) {
     gen(codegen, node_get_child(args, i));
   }
-  emit_push(emitter, 0); // TODO: call function
+  emit_call(emitter, func->label);
   emit_slide(emitter, arg_count);
 }
 
@@ -484,4 +504,24 @@ static int get_var_index(codegen_t *codegen, const char *name) {
 static int allocate(codegen_t *codegen, const char *name, int size) {
   varentry_t *e = vartable_add_var(codegen->vartable, name, size);
   return varentry_get_offset(e);
+}
+
+static func_def_t *register_func(codegen_t *codegen, const char *name) {
+  func_def_t *func;
+
+  for (int i = 0; i < array_count(codegen->funcs); ++i) {
+    func_def_t *f = (func_def_t *)array_get(codegen->funcs, i);
+    if (strcmp(f->name, name) == 0) {
+      return f;
+    }
+  }
+
+  func = (func_def_t *)AK_MEM_MALLOC(sizeof(func_def_t));
+  func->name = (char *)AK_MEM_CALLOC(strlen(name) + 1, sizeof(char));
+  strcpy(func->name, name);
+  func->label = alloc_label_id(codegen);
+
+  array_append(codegen->funcs, func);
+
+  return func;
 }
