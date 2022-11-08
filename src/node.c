@@ -153,6 +153,10 @@ node_t *node_new_break(void) {
   return node_new(NT_BREAK);
 }
 
+node_t *node_new_continue(void) {
+  return node_new(NT_CONTINUE);
+}
+
 node_t *node_new_puti(node_t *expr) {
   node_t *node = node_new(NT_PUTI);
   node->l = expr;
@@ -374,6 +378,9 @@ static void dump_rec(node_t *node, int indent) {
     break;
   case NT_BREAK:
     puts_indent(indent, "Break-Statement");
+    break;
+  case NT_CONTINUE:
+    puts_indent(indent, "Continue-Statement");
     break;
   case NT_PUTI:
     puts_indent(indent, "Puti-Statement");
