@@ -10,7 +10,7 @@ OBJS           = $(SRCS:src/%.c=obj/%.o)
 TARGET         = ./bin/akarin
 PREFIX         = /usr/local/bin
 
-.PHONY: debug release dirs clean install
+.PHONY: debug release clean install
 
 debug: CFLAGS += $(CFLAGS_DEBUG)
 release: CFLAGS += $(CFLAGS_RELEASE)
@@ -20,12 +20,10 @@ $(TARGET): $(OBJS)
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
-obj/%.o: src/%.c dirs
+obj/%.o: src/%.c
+	@mkdir -p $(OBJDIRS) $(DEPSDIRS)
 	$(CC) $(CFLAGS) -c $< -o $@
 	$(CC) $(CFLAGS) -MT $@ -MM $< > deps/$*.d
-
-dirs:
-	mkdir -p $(OBJDIRS) $(DEPSDIRS)
 
 clean:
 	$(RM) -rf ./obj ./bin ./deps
