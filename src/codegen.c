@@ -98,6 +98,11 @@ void codegen_generate(codegen_t *codegen) {
 
   gen(codegen, codegen->root);
 
+  if (!func_main->resolved) {
+    fprintf(stderr, "error: function 'main' is not defined.\n");
+    return;
+  }
+
   for (int i = 0; i < array_count(codegen->insts); ++i) {
     inst_t *inst = (inst_t *)array_get(codegen->insts, i);
     emit(codegen->emitter, inst);
