@@ -60,8 +60,7 @@ varentry_t *vartable_add_var(vartable_t *vartable, const char *name, int size) {
     entry = (varentry_t *)AK_MEM_MALLOC(sizeof(varentry_t));
     entry->offset = vartable->offset;
     entry->is_local = vartable->parent != NULL;
-    entry->name = (char *)AK_MEM_CALLOC(strlen(name) + 1, sizeof(char));
-    strcpy(entry->name, name);
+    entry->name = AK_MEM_STRDUP(name);
 
     array_append(vartable->vars, entry);
     vartable->offset += size;

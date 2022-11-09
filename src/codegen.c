@@ -627,8 +627,7 @@ static func_def_t *register_func(codegen_t *codegen, const char *name) {
   }
 
   func = (func_def_t *)AK_MEM_MALLOC(sizeof(func_def_t));
-  func->name = (char *)AK_MEM_CALLOC(strlen(name) + 1, sizeof(char));
-  strcpy(func->name, name);
+  func->name = AK_MEM_STRDUP(name);
   func->label = alloc_label_id(codegen);
 
   array_append(codegen->funcs, func);
