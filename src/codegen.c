@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,7 @@
 typedef struct {
   char *name;
   int   label;
+  bool  resolved;
 } func_def_t;
 
 struct codegen_t {
@@ -50,7 +52,7 @@ static void gen_func_call(codegen_t *codegen, node_t *node);
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand);
 static int  alloc_label_id(codegen_t *codegen);
 static int  allocate(codegen_t *codegen, const char *name, int size);
-static func_def_t *register_func(codegen_t *codegen, const char *name);
+static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name);
 
 codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
@@ -89,7 +91,7 @@ void codegen_release(codegen_t **pcodegen) {
 }
 
 void codegen_generate(codegen_t *codegen) {
-  func_def_t *func_main = register_func(codegen, "main");
+  func_def_t *func_main = lookup_or_register_func(codegen, "main");
 
   emit_inst(codegen, OP_CALL, func_main->label);
   emit_inst(codegen, OP_HALT, 0);
@@ -321,8 +323,16 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
   node_t *param = node_get_child(node, 1);
   node_t *body = node_get_child(node, 2);
-  func_def_t *func = register_func(codegen, node_get_name(ident));
-  vartable_t *vartable_local = vartable_new(codegen->vartable);
+  func_def_t *func = lookup_or_register_func(codegen, node_get_name(ident));
+  vartable_t *vartable_local;
+
+  if (func->resolved) {
+    fprintf(stderr, "error: function '%s' is redefined.\n", func->name);
+    return;
+  }
+  func->resolved = true;
+
+  vartable_local = vartable_new(codegen->vartable);
 
   for (int i = 0; i < node_get_child_count(param); ++i) {
     node_t *param_ident = node_get_child(param, i);
@@ -592,7 +602,7 @@ static void gen_func_call(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
   node_t *args = node_get_child(node, 1);
   int arg_count = node_get_child_count(args);
-  func_def_t *func = register_func(codegen, node_get_name(ident));
+  func_def_t *func = lookup_or_register_func(codegen, node_get_name(ident));
 
   for (int i = arg_count - 1; i >= 0; --i) {
     gen(codegen, node_get_child(args, i));
@@ -616,21 +626,20 @@ static int allocate(codegen_t *codegen, const char *name, int size) {
   return varentry_get_offset(e);
 }
 
-static func_def_t *register_func(codegen_t *codegen, const char *name) {
+static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name) {
   func_def_t *func;
 
   for (int i = 0; i < array_count(codegen->funcs); ++i) {
-    func_def_t *f = (func_def_t *)array_get(codegen->funcs, i);
-    if (strcmp(f->name, name) == 0) {
-      return f;
+    func = (func_def_t *)array_get(codegen->funcs, i);
+    if (strcmp(func->name, name) == 0) {
+      return func;
     }
   }
 
   func = (func_def_t *)AK_MEM_MALLOC(sizeof(func_def_t));
   func->name = AK_MEM_STRDUP(name);
   func->label = alloc_label_id(codegen);
-
+  func->resolved = false;
   array_append(codegen->funcs, func);
-
   return func;
 }
