@@ -1,8 +1,8 @@
 # Print prime numbers up to 50.
 
-func main() {
-  array np[50];
+array np[50];
 
+func main() {
   i = 3;
   while (i * i < 50) {
     if (!np[i]) {
