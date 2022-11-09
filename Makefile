@@ -31,4 +31,4 @@ clean:
 install:
 	install -m 755 $(TARGET) $(PREFIX)
 
--include $(wildcard ./deps/*.d)
+-include $(shell find deps -name '*.d' -type f 2> /dev/null)
