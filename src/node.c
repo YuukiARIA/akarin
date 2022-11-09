@@ -271,8 +271,6 @@ bool node_is_all_paths_ended_with_return(node_t *node) {
       return node_is_all_paths_ended_with_return(node->l) && node_is_all_paths_ended_with_return(node->r);
     }
     return false;
-  case NT_WHILE:
-    return node_is_all_paths_ended_with_return(node->l);
   case NT_RETURN:
     return true;
   default:
