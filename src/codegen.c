@@ -105,15 +105,14 @@ void codegen_generate(codegen_t *codegen) {
   if (!func_main->resolved) {
     error(codegen, "error: function 'main' is not defined.\n");
   }
-  if (codegen->error_count > 0) {
-    return;
-  }
+}
 
-  for (int i = 0; i < array_count(codegen->insts); ++i) {
-    inst_t *inst = (inst_t *)array_get(codegen->insts, i);
-    emit(codegen->emitter, inst);
-  }
-  emit_end(codegen->emitter);
+int codegen_get_error_count(codegen_t *codegen) {
+  return codegen->error_count;
+}
+
+array_t *codegen_get_instructions(codegen_t *codegen) {
+  return codegen->insts;
 }
 
 static void gen(codegen_t *codegen, node_t *node) {

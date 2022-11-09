@@ -3,9 +3,11 @@
 #include <string.h>
 #include "parser.h"
 #include "codegen.h"
+#include "inst.h"
 #include "emitter_ws.h"
 #include "emitter_pseudo.h"
 #include "utils/memory.h"
+#include "utils/array.h"
 
 typedef enum {
   EMIT_WHITESPACE,
@@ -35,12 +37,27 @@ static emitter_t *create_emitter(emit_mode_t emit_mode) {
   }
 }
 
-static void generate_code(node_t *node, emit_mode_t emit_mode) {
+static int generate_code(node_t *node, emit_mode_t emit_mode) {
   emitter_t *emitter = create_emitter(emit_mode);
   codegen_t *codegen = codegen_new(node, emitter);
+  int error_count;
+
   codegen_generate(codegen);
+  error_count = codegen_get_error_count(codegen);
+
+  if (error_count == 0) {
+    array_t *insts = codegen_get_instructions(codegen);
+    for (int i = 0; i < array_count(insts); ++i) {
+      inst_t *inst = (inst_t *)array_get(insts, i);
+      emit(emitter, inst);
+    }
+    emit_end(emitter);
+  }
+
   codegen_release(&codegen);
   emitter_release(&emitter);
+
+  return error_count;
 }
 
 int main(int argc, char *argv[]) {
@@ -95,10 +112,11 @@ int main(int argc, char *argv[]) {
       node_dump_tree(node);
     }
     else {
-      generate_code(node, emit_mode);
+      error_count = generate_code(node, emit_mode);
     }
   }
-  else {
+
+  if (error_count > 0) {
     fprintf(stderr, "%d errors found.\n", error_count);
   }
 
