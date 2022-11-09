@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +13,14 @@
 typedef enum {
   EMIT_WHITESPACE,
   EMIT_SYMBOLIC,
-  EMIT_PSEUDO_CODE,
+  EMIT_PSEUDO_CODE
 } emit_mode_t;
+
+typedef struct {
+  FILE       *input;
+  bool        dump_tree;
+  emit_mode_t emit_mode;
+} option_t;
 
 static void show_help(void) {
   printf("\x1B[1mAkarin\x1B[0m - A Whitespace Transpiler\n\n");
@@ -24,6 +31,29 @@ static void show_help(void) {
   printf("    -s              Transpile into symbolic (S, T, L) code instead of whitespace.\n");
   printf("    -p              Transpile into pseudo mnemonic code instead of whitespace.\n");
   printf("    -d              Dump syntax tree.\n");
+}
+
+static void process_options(int argc, char *argv[], option_t *opt) {
+  for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "-h") == 0) {
+      show_help();
+      exit(0);
+    }
+    else if (strcmp(argv[i], "-s") == 0) {
+      opt->emit_mode = EMIT_SYMBOLIC;
+    }
+    else if (strcmp(argv[i], "-p") == 0) {
+      opt->emit_mode = EMIT_PSEUDO_CODE;
+    }
+    else if (strcmp(argv[i], "-d") == 0) {
+      opt->dump_tree = true;
+    }
+    else {
+      if (opt->input == stdin) {
+	opt->input = fopen(argv[i], "r");
+      }
+    }
+  }
 }
 
 static emitter_t *create_emitter(emit_mode_t emit_mode) {
@@ -74,52 +104,31 @@ static node_t *parse(FILE *input, int *error_count) {
 }
 
 int main(int argc, char *argv[]) {
-  FILE *input = stdin;
-  int needs_close = 0;
-  int dump_tree = 0;
+  option_t opt = { .input = stdin, .dump_tree = false, .emit_mode = EMIT_WHITESPACE };
   node_t *node;
-  emit_mode_t emit_mode = EMIT_WHITESPACE;
   int error_count = 0;
 
   /* process command line args */
-  for (int i = 1; i < argc; ++i) {
-    if (strcmp(argv[i], "-h") == 0) {
-      show_help();
-      return 0;
-    }
-    else if (strcmp(argv[i], "-s") == 0) {
-      emit_mode = EMIT_SYMBOLIC;
-    }
-    else if (strcmp(argv[i], "-p") == 0) {
-      emit_mode = EMIT_PSEUDO_CODE;
-    }
-    else if (strcmp(argv[i], "-d") == 0) {
-      dump_tree = 1;
-    }
-    else {
-      input = fopen(argv[i], "r");
-      needs_close = 1;
-    }
-  }
+  process_options(argc, argv, &opt);
 
-  if (!input) {
+  if (!opt.input) {
     fprintf(stderr, "error: could not open file - %s\n", argv[1]);
     return 1;
   }
 
-  node = parse(input, &error_count);
+  node = parse(opt.input, &error_count);
 
-  if (needs_close) {
-    fclose(input);
-    input = NULL;
+  if (opt.input != stdin) {
+    fclose(opt.input);
+    opt.input = NULL;
   }
 
   if (error_count == 0) {
-    if (dump_tree) {
+    if (opt.dump_tree) {
       node_dump_tree(node);
     }
     else {
-      error_count = generate_code(node, emit_mode);
+      error_count = generate_code(node, opt.emit_mode);
     }
   }
 
