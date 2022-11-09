@@ -37,25 +37,30 @@ static emitter_t *create_emitter(emit_mode_t emit_mode) {
   }
 }
 
-static int generate_code(node_t *node, emit_mode_t emit_mode) {
+static void emit_code(array_t *insts, emit_mode_t emit_mode) {
   emitter_t *emitter = create_emitter(emit_mode);
-  codegen_t *codegen = codegen_new(node, emitter);
+
+  for (int i = 0; i < array_count(insts); ++i) {
+    inst_t *inst = (inst_t *)array_get(insts, i);
+    emit(emitter, inst);
+  }
+  emit_end(emitter);
+
+  emitter_release(&emitter);
+}
+
+static int generate_code(node_t *node, emit_mode_t emit_mode) {
+  codegen_t *codegen = codegen_new(node);
   int error_count;
 
   codegen_generate(codegen);
   error_count = codegen_get_error_count(codegen);
 
   if (error_count == 0) {
-    array_t *insts = codegen_get_instructions(codegen);
-    for (int i = 0; i < array_count(insts); ++i) {
-      inst_t *inst = (inst_t *)array_get(insts, i);
-      emit(emitter, inst);
-    }
-    emit_end(emitter);
+    emit_code(codegen_get_instructions(codegen), emit_mode);
   }
 
   codegen_release(&codegen);
-  emitter_release(&emitter);
 
   return error_count;
 }

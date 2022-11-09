@@ -8,7 +8,6 @@
 #include "vartable.h"
 #include "operator.h"
 #include "inst.h"
-#include "emitter.h"
 #include "utils/memory.h"
 #include "utils/array.h"
 
@@ -27,7 +26,6 @@ struct codegen_t {
   int         cur_label_tail;
   int         stack_depth;
   array_t    *insts;
-  emitter_t  *emitter;
   int         error_count;
 };
 
@@ -57,7 +55,7 @@ static int  allocate(codegen_t *codegen, const char *name, int size);
 static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name);
 static void error(codegen_t *codegen, const char *fmt, ...);
 
-codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
+codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
@@ -67,7 +65,6 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen->cur_label_tail = -1;
   codegen->stack_depth = 0;
   codegen->insts = array_new(256);
-  codegen->emitter = emitter;
   codegen->error_count = 0;
   return codegen;
 }
