@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "codegen.h"
 #include "node.h"
 #include "vartable.h"
@@ -27,6 +28,7 @@ struct codegen_t {
   int         stack_depth;
   array_t    *insts;
   emitter_t  *emitter;
+  int         error_count;
 };
 
 static void gen(codegen_t *codegen, node_t *node);
@@ -53,6 +55,7 @@ static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand);
 static int  alloc_label_id(codegen_t *codegen);
 static int  allocate(codegen_t *codegen, const char *name, int size);
 static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name);
+static void error(codegen_t *codegen, const char *fmt, ...);
 
 codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
@@ -65,6 +68,7 @@ codegen_t *codegen_new(node_t *root, emitter_t *emitter) {
   codegen->stack_depth = 0;
   codegen->insts = array_new(256);
   codegen->emitter = emitter;
+  codegen->error_count = 0;
   return codegen;
 }
 
@@ -99,7 +103,9 @@ void codegen_generate(codegen_t *codegen) {
   gen(codegen, codegen->root);
 
   if (!func_main->resolved) {
-    fprintf(stderr, "error: function 'main' is not defined.\n");
+    error(codegen, "error: function 'main' is not defined.\n");
+  }
+  if (codegen->error_count > 0) {
     return;
   }
 
@@ -263,7 +269,7 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
 static void gen_break_statement(codegen_t *codegen, node_t *node) {
   int label = codegen->cur_label_tail;
   if (label == -1) {
-    fputs("error: illegal break statement.", stderr);
+    error(codegen, "error: illegal break statement.\n");
     return;
   }
 
@@ -273,7 +279,7 @@ static void gen_break_statement(codegen_t *codegen, node_t *node) {
 static void gen_continue_statement(codegen_t *codegen, node_t *node) {
   int label = codegen->cur_label_head;
   if (label == -1) {
-    fputs("error: illegal break statement.", stderr);
+    error(codegen, "error: illegal break statement.\n");
     return;
   }
 
@@ -296,7 +302,7 @@ static void gen_getc_statement(codegen_t *codegen, node_t *node) {
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
   if (varentry_is_local(varentry)) {
-    fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+    error(codegen, "error: function parameter '%s' is readonly.\n", name);
     return;
   }
 
@@ -310,7 +316,7 @@ static void gen_geti_statement(codegen_t *codegen, node_t *node) {
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
   if (varentry_is_local(varentry)) {
-    fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+    error(codegen, "error: function parameter '%s' is readonly.\n", name);
     return;
   }
 
@@ -332,7 +338,7 @@ static void gen_func_statement(codegen_t *codegen, node_t *node) {
   vartable_t *vartable_local;
 
   if (func->resolved) {
-    fprintf(stderr, "error: function '%s' is redefined.\n", func->name);
+    error(codegen, "error: function '%s' is redefined.\n", func->name);
     return;
   }
   func->resolved = true;
@@ -539,7 +545,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
       const char *name = node_get_name(ident);
       varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
       if (varentry_is_local(varentry)) {
-	fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+	error(codegen, "error: function parameter '%s' is readonly.\n", name);
 	return;
       }
       emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
@@ -551,7 +557,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
       const char *name = node_get_name(ident);
       varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
       if (varentry_is_local(varentry)) {
-	fprintf(stderr, "error: function parameter '%s' is readonly.\n", name);
+	error(codegen, "error: function parameter '%s' is readonly.\n", name);
 	return;
       }
       emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
@@ -562,7 +568,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     }
     break;
   default:
-    fprintf(stderr, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
+    error(codegen, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
     return;
   }
 
@@ -591,7 +597,7 @@ static void gen_array(codegen_t *codegen, node_t *node) {
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
   if (varentry_is_local(varentry)) {
-    fprintf(stderr, "error: function parameter '%s' is not array.\n", name);
+    error(codegen, "error: function parameter '%s' is not array.\n", name);
     return;
   }
 
@@ -647,4 +653,12 @@ static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name)
   func->resolved = false;
   array_append(codegen->funcs, func);
   return func;
+}
+
+static void error(codegen_t *codegen, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(stderr, fmt, args);
+  va_end(args);
+  codegen->error_count++;
 }
