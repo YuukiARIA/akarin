@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -192,11 +193,19 @@ static void lex_char(lexer_t *lexer) {
   lexer->ivalue = c;
 }
 
+static bool is_symbol_head(int c) {
+  return c == '_' || isalpha(c);
+}
+
+static bool is_symbol_part(int c) {
+  return c == '_' || isalnum(c);
+}
+
 void lexer_lex_symbol(lexer_t *lexer) {
   int i;
 
   clear_buf(lexer);
-  while (isalpha(peek(lexer))) {
+  while (is_symbol_part(peek(lexer))) {
     append_char(lexer, peek(lexer));
     succ(lexer);
   }
@@ -337,7 +346,7 @@ void lexer_next(lexer_t *lexer) {
     lexer_lex_integer(lexer);
     return;
   }
-  else if (isalpha(c)) {
+  else if (is_symbol_head(c)) {
     lexer_lex_symbol(lexer);
     return;
   }
