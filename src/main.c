@@ -65,18 +65,24 @@ static int generate_code(node_t *node, emit_mode_t emit_mode) {
   return error_count;
 }
 
+static node_t *parse(FILE *input, int *error_count) {
+  parser_t *parser = parser_new(input);
+  node_t *node = parser_parse(parser);
+  *error_count += parser_get_total_error_count(parser);
+  parser_release(&parser);
+  return node;
+}
+
 int main(int argc, char *argv[]) {
   FILE *input = stdin;
   int needs_close = 0;
   int dump_tree = 0;
-  parser_t *parser;
   node_t *node;
   emit_mode_t emit_mode = EMIT_WHITESPACE;
-  int i;
-  int error_count;
+  int error_count = 0;
 
   /* process command line args */
-  for (i = 1; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "-h") == 0) {
       show_help();
       return 0;
@@ -101,16 +107,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  parser = parser_new(input);
-  node = parser_parse(parser);
+  node = parse(input, &error_count);
 
   if (needs_close) {
     fclose(input);
     input = NULL;
   }
-
-  error_count = parser_get_total_error_count(parser);
-  parser_release(&parser);
 
   if (error_count == 0) {
     if (dump_tree) {
