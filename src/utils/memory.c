@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct mem_t mem_t;
 struct mem_t {
@@ -92,6 +93,12 @@ void *akarin_realloc(void *ptr, size_t size, const char *file, int line, const c
 void akarin_free(void *ptr, const char *file, int line, const char *func) {
   free(ptr);
   release(ptr, file, line, func);
+}
+
+char *akarin_strdup(const char *str, const char *file, int line, const char *func) {
+  char *newstr = strdup(str);
+  allocate(newstr, strlen(newstr) + 1, file, line, func);
+  return newstr;
 }
 
 void akarin_memory_print(void) {
