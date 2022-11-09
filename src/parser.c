@@ -14,6 +14,7 @@ static binary_op_t ttype_to_binary_op(ttype_t ttype);
 static int     is_eof(parser_t *parser);
 static int     is_ttype(parser_t *parser, ttype_t ttype);
 static node_t *parse_program(parser_t *parser);
+static node_t *parse_toplevel_statement(parser_t *parser);
 static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
 static node_t *parse_if_statement(parser_t *parser);
@@ -113,7 +114,7 @@ static int expect(parser_t *parser, ttype_t ttype) {
 static node_t *parse_program(parser_t *parser) {
   node_t *root = node_new_empty(), *node = NULL;
   while (!is_eof(parser)) {
-    node = parse_statement(parser);
+    node = parse_toplevel_statement(parser);
     root = node_new_seq(root, node);
   }
   return root;
@@ -130,6 +131,29 @@ static node_t *parse_block(parser_t *parser) {
   expect(parser, TT_RBRACE);
 
   return root;
+}
+
+static node_t *parse_toplevel_statement(parser_t *parser) {
+  location_t location;
+
+  switch (lexer_ttype(parser->lexer)) {
+  case TT_KW_ARRAY:
+    return parse_array_statement(parser);
+  case TT_KW_FUNC:
+    return parse_func_statement(parser);
+  default:
+    break;
+  }
+
+  location = lexer_get_location(parser->lexer);
+  fprintf(stderr, "error: unexpected '%s' (%s). Only 'array' or 'func' are allowed as toplevel statement. (line:%d,column:%d)\n",
+	  lexer_text(parser->lexer),
+          ttype_to_string(lexer_ttype(parser->lexer)),
+          location.line,
+          location.column);
+  ++parser->error_count;
+  lexer_next(parser->lexer);
+  return node_new_invalid();
 }
 
 static node_t *parse_statement(parser_t *parser) {
@@ -152,14 +176,10 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_geti(parser);
   case TT_KW_GETC:
     return parse_getc(parser);
-  case TT_KW_ARRAY:
-    return parse_array_statement(parser);
   case TT_KW_RETURN:
     return parse_return_statement(parser);
   case TT_KW_HALT:
     return parse_halt_statement(parser);
-  case TT_KW_FUNC:
-    return parse_func_statement(parser);
   default:
     return parse_expr_statement(parser);
   }
