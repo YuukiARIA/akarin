@@ -100,7 +100,8 @@ static int expect(parser_t *parser, ttype_t ttype) {
   }
 
   location = lexer_get_location(parser->lexer);
-  fprintf(stderr, "error: unexpected %s, but expected %s. (line:%d,column:%d)\n",
+  fprintf(stderr, "error: unexpected '%s' (%s), but expected %s. (line:%d,column:%d)\n",
+	  lexer_text(parser->lexer),
           ttype_to_string(lexer_ttype(parser->lexer)),
           ttype_to_string(ttype),
           location.line,
@@ -448,7 +449,7 @@ static node_t *parse_atomic(parser_t *parser) {
   }
 
   location = lexer_get_location(parser->lexer);
-  fprintf(stderr, "error: unexpected %s. (line:%d,column:%d)\n", ttype_to_string(lexer_ttype(parser->lexer)), location.line, location.column);
+  fprintf(stderr, "error: unexpected '%s' (%s). (line:%d,column:%d)\n", lexer_text(parser->lexer), ttype_to_string(lexer_ttype(parser->lexer)), location.line, location.column);
   lexer_next(parser->lexer);
   ++parser->error_count;
   return node_new_invalid();

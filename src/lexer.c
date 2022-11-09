@@ -59,6 +59,11 @@ static void append_char(lexer_t *lexer, int c) {
   }
 }
 
+static void set_token(lexer_t *lexer, ttype_t ttype, const char *text) {
+  lexer->ttype = ttype;
+  strcpy(lexer->text, text);
+}
+
 lexer_t *lexer_new(FILE *input) {
   lexer_t *lexer = (lexer_t *)AK_MEM_MALLOC(sizeof(lexer_t));
   lexer->input = input;
@@ -221,107 +226,107 @@ void lexer_lex_symbol(lexer_t *lexer) {
   }
 }
 
-static int lex_op(lexer_t *lexer) {
+static bool lex_op(lexer_t *lexer) {
   switch (peek(lexer)) {
   case ',':
     succ(lexer);
-    lexer->ttype = TT_COMMA;
-    return 1;
+    set_token(lexer, TT_COMMA, ",");
+    return true;
   case ';':
     succ(lexer);
-    lexer->ttype = TT_SEMICOLON;
-    return 1;
+    set_token(lexer, TT_SEMICOLON, ";");
+    return true;
   case '=':
     succ(lexer);
     if (peek(lexer) == '=') {
       succ(lexer);
-      lexer->ttype = TT_EQEQ;
-      return 1;
+      set_token(lexer, TT_EQEQ, "==");
+      return true;
     }
-    lexer->ttype = TT_EQ;
-    return 1;
+    set_token(lexer, TT_EQ, "=");
+    return true;
   case '!':
     succ(lexer);
     if (peek(lexer) == '=') {
       succ(lexer);
-      lexer->ttype = TT_EXCLAEQ;
-      return 1;
+      set_token(lexer, TT_EXCLAEQ, "!=");
+      return true;
     }
-    lexer->ttype = TT_EXCLA;
-    return 1;
+    set_token(lexer, TT_EXCLA, "!");
+    return true;
   case '&':
     succ(lexer);
-    lexer->ttype = TT_AMP;
-    return 1;
+    set_token(lexer, TT_AMP, "&");
+    return true;
   case '|':
     succ(lexer);
-    lexer->ttype = TT_BAR;
-    return 1;
+    set_token(lexer, TT_BAR, "|");
+    return true;
   case '+':
     succ(lexer);
-    lexer->ttype = TT_PLUS;
-    return 1;
+    set_token(lexer, TT_PLUS, "+");
+    return true;
   case '-':
     succ(lexer);
-    lexer->ttype = TT_MINUS;
-    return 1;
+    set_token(lexer, TT_MINUS, "-");
+    return true;
   case '*':
     succ(lexer);
-    lexer->ttype = TT_ASTERISK;
-    return 1;
+    set_token(lexer, TT_ASTERISK, "*");
+    return true;
   case '/':
     succ(lexer);
-    lexer->ttype = TT_SLASH;
-    return 1;
+    set_token(lexer, TT_SLASH, "/");
+    return true;
   case '%':
     succ(lexer);
-    lexer->ttype = TT_PERCENT;
-    return 1;
+    set_token(lexer, TT_PERCENT, "%");
+    return true;
   case '<':
     succ(lexer);
     if (peek(lexer) == '=') {
       succ(lexer);
-      lexer->ttype = TT_LE;
-      return 1;
+      set_token(lexer, TT_LE, "<=");
+      return true;
     }
-    lexer->ttype = TT_LT;
-    return 1;
+    set_token(lexer, TT_LT, "<");
+    return true;
   case '>':
     succ(lexer);
     if (peek(lexer) == '=') {
       succ(lexer);
-      lexer->ttype = TT_GE;
-      return 1;
+      set_token(lexer, TT_GE, ">=");
+      return true;
     }
-    lexer->ttype = TT_GT;
-    return 1;
+    set_token(lexer, TT_GT, ">");
+    return true;
   case '(':
     succ(lexer);
-    lexer->ttype = TT_LPAREN;
-    return 1;
+    set_token(lexer, TT_LPAREN, "(");
+    return true;
   case ')':
     succ(lexer);
-    lexer->ttype = TT_RPAREN;
-    return 1;
+    set_token(lexer, TT_RPAREN, ")");
+    return true;
   case '{':
     succ(lexer);
-    lexer->ttype = TT_LBRACE;
-    return 1;
+    set_token(lexer, TT_LBRACE, "{");
+    return true;
   case '}':
     succ(lexer);
-    lexer->ttype = TT_RBRACE;
-    return 1;
+    set_token(lexer, TT_RBRACE, "}");
+    return true;
   case '[':
     succ(lexer);
-    lexer->ttype = TT_LBRACKET;
-    return 1;
+    set_token(lexer, TT_LBRACKET, "[");
+    return true;
   case ']':
     succ(lexer);
-    lexer->ttype = TT_RBRACKET;
-    return 1;
+    set_token(lexer, TT_RBRACKET, "]");
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 void lexer_next(lexer_t *lexer) {
@@ -334,7 +339,7 @@ void lexer_next(lexer_t *lexer) {
   c = peek(lexer);
 
   if (c == EOF) {
-    lexer->ttype = TT_EOF;
+    set_token(lexer, TT_EOF, "<EOF>");
     return;
   }
 
@@ -355,7 +360,7 @@ void lexer_next(lexer_t *lexer) {
   }
 
   fprintf(stderr, "error: unrecognizable character '%c' (line:%d,column:%d)\n", c, lexer->location.line, lexer->location.column);
-  lexer->ttype = TT_UNKNOWN;
+  set_token(lexer, TT_UNKNOWN, "<UNKNOWN>");
   succ(lexer);
   ++lexer->error_count;
 }
