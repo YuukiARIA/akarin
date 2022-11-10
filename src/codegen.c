@@ -574,6 +574,10 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
   case NT_VARIABLE:
     ident = node_get_child(lhs, 0);
     name = node_get_name(ident);
+    if (lookup_const(codegen, name)) {
+      error(codegen, "error: cannot assign to '%s' defined as a constant.\n", name);
+      return;
+    }
     varentry = vartable_lookup_or_add_var(codegen->vartable, name);
     if (varentry_is_local(varentry)) {
       error(codegen, "error: function parameter '%s' is readonly.\n", name);
@@ -606,8 +610,17 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
 
 static void gen_variable(codegen_t *codegen, node_t *node) {
   node_t *ident = node_get_child(node, 0);
-  varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, node_get_name(ident));
-  int offset = varentry_get_offset(varentry);
+  const_def_t *cdef = lookup_const(codegen, node_get_name(ident));
+  varentry_t *varentry;
+  int offset;
+
+  if (cdef) {
+    emit_inst(codegen, OP_PUSH, cdef->value);
+    return;
+  }
+
+  varentry = vartable_lookup_or_add_var(codegen->vartable, node_get_name(ident));
+  offset = varentry_get_offset(varentry);
 
   if (varentry_is_local(varentry)) {
     emit_inst(codegen, OP_COPY, codegen->stack_depth + offset);
