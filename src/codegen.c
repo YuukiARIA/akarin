@@ -13,6 +13,11 @@
 
 typedef struct {
   char *name;
+  int   value;
+} const_def_t;
+
+typedef struct {
+  char *name;
   int   label;
   bool  resolved;
 } func_def_t;
@@ -21,6 +26,7 @@ struct codegen_t {
   node_t     *root;
   int         label_count;
   vartable_t *vartable;
+  array_t    *consts;
   array_t    *funcs;
   int         cur_label_head;
   int         cur_label_tail;
@@ -29,6 +35,7 @@ struct codegen_t {
   int         error_count;
 };
 
+static void collect_const_defs(codegen_t *codegen, node_t *node);
 static void gen(codegen_t *codegen, node_t *node);
 static void gen_sequence(codegen_t *codegen, node_t *node);
 static void gen_expr_statement(codegen_t *codegen, node_t *node);
@@ -52,6 +59,8 @@ static void gen_func_call(codegen_t *codegen, node_t *node);
 static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand);
 static int  alloc_label_id(codegen_t *codegen);
 static int  allocate(codegen_t *codegen, const char *name, int size);
+static void register_const(codegen_t *codegen, const char *name, int value);
+static const_def_t *lookup_const(codegen_t *codegen, const char *name);
 static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name);
 static void error(codegen_t *codegen, const char *fmt, ...);
 
@@ -60,6 +69,7 @@ codegen_t *codegen_new(node_t *root) {
   codegen->root = root;
   codegen->label_count = 0;
   codegen->vartable = vartable_new(NULL);
+  codegen->consts = array_new(64);
   codegen->funcs = array_new(64);
   codegen->cur_label_head = -1;
   codegen->cur_label_tail = -1;
@@ -73,6 +83,13 @@ void codegen_release(codegen_t **pcodegen) {
   codegen_t *c = *pcodegen;
 
   vartable_release(&c->vartable);
+
+  for (int i = 0; i < array_count(c->consts); ++i) {
+    const_def_t *cdef = (const_def_t *)array_get(c->consts, i);
+    AK_MEM_FREE(cdef->name);
+    AK_MEM_FREE(cdef);
+  }
+  array_release(&c->consts);
 
   for (int i = 0; i < array_count(c->funcs); ++i) {
     func_def_t *f = (func_def_t *)array_get(c->funcs, i);
@@ -94,6 +111,8 @@ void codegen_release(codegen_t **pcodegen) {
 void codegen_generate(codegen_t *codegen) {
   func_def_t *func_main = lookup_or_register_func(codegen, "main");
 
+  collect_const_defs(codegen, codegen->root);
+
   emit_inst(codegen, OP_CALL, func_main->label);
   emit_inst(codegen, OP_HALT, 0);
 
@@ -110,6 +129,20 @@ int codegen_get_error_count(codegen_t *codegen) {
 
 array_t *codegen_get_instructions(codegen_t *codegen) {
   return codegen->insts;
+}
+
+static void collect_const_defs(codegen_t *codegen, node_t *node) {
+  switch (node_get_ntype(node)) {
+  case NT_SEQ:
+    collect_const_defs(codegen, node_get_l(node));
+    collect_const_defs(codegen, node_get_r(node));
+    break;
+  case NT_CONST_STATEMENT:
+    register_const(codegen, node_get_name(node_get_child(node, 0)), node_get_value(node_get_child(node, 1)));
+    break;
+  default:
+    break;
+  }
 }
 
 static void gen(codegen_t *codegen, node_t *node) {
@@ -629,6 +662,30 @@ static int alloc_label_id(codegen_t *codegen) {
 static int allocate(codegen_t *codegen, const char *name, int size) {
   varentry_t *e = vartable_add_var(codegen->vartable, name, size);
   return varentry_get_offset(e);
+}
+
+static void register_const(codegen_t *codegen, const char *name, int value) {
+  const_def_t *cdef = lookup_const(codegen, name);
+
+  if (cdef) {
+    error(codegen, "error: constant '%s' is redefined.\n", name);
+    return;
+  }
+
+  cdef = (const_def_t *)AK_MEM_MALLOC(sizeof(const_def_t));
+  cdef->name = AK_MEM_STRDUP(name);
+  cdef->value = value;
+  array_append(codegen->consts, cdef);
+}
+
+static const_def_t *lookup_const(codegen_t *codegen, const char *name) {
+  for (int i = 0; i < array_count(codegen->consts); ++i) {
+    const_def_t *cdef = (const_def_t *)array_get(codegen->consts, i);
+    if (strcmp(cdef->name, name) == 0) {
+      return cdef;
+    }
+  }
+  return NULL;
 }
 
 static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name) {
