@@ -1,0 +1,8 @@
+const CONST_INT = 123;
+const CONST_CHAR = 'A';
+
+func main() {
+  puti CONSTANT;
+  putc CONST_CHAR;
+  return 0;
+}
