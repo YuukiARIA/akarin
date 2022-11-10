@@ -531,40 +531,38 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
 static void gen_assign(codegen_t *codegen, node_t *node) {
   node_t *lhs = node_get_l(node);
   node_t *expr = node_get_r(node);
+  node_t *ident;
+  const char *name;
+  varentry_t *varentry;
 
   gen(codegen, expr);
 
   switch (node_get_ntype(lhs)) {
   case NT_VARIABLE:
-    {
-      node_t *ident = node_get_child(lhs, 0);
-      const char *name = node_get_name(ident);
-      varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
-      if (varentry_is_local(varentry)) {
-	error(codegen, "error: function parameter '%s' is readonly.\n", name);
-	return;
-      }
-      emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
+    ident = node_get_child(lhs, 0);
+    name = node_get_name(ident);
+    varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+    if (varentry_is_local(varentry)) {
+      error(codegen, "error: function parameter '%s' is readonly.\n", name);
+      return;
     }
+    emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
     break;
   case NT_ARRAY:
-    {
-      node_t *ident = node_get_l(lhs);
-      const char *name = node_get_name(ident);
-      varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
-      if (varentry_is_local(varentry)) {
-	error(codegen, "error: function parameter '%s' is readonly.\n", name);
-	return;
-      }
-      emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
-      codegen->stack_depth++;
-      gen(codegen, node_get_r(lhs));
-      emit_inst(codegen, OP_ADD, 0);
-      codegen->stack_depth--;
+    ident = node_get_l(lhs);
+    name = node_get_name(ident);
+    varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+    if (varentry_is_local(varentry)) {
+      error(codegen, "error: function parameter '%s' is readonly.\n", name);
+      return;
     }
+    emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
+    codegen->stack_depth++;
+    gen(codegen, node_get_r(lhs));
+    emit_inst(codegen, OP_ADD, 0);
+    codegen->stack_depth--;
     break;
   default:
-    error(codegen, "error: invalid left hand value. (ntype=%d)\n", node_get_ntype(lhs));
     return;
   }
 
