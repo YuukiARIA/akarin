@@ -2,7 +2,7 @@ const CONST_INT = 123;
 const CONST_CHAR = 'A';
 
 func main() {
-  puti CONSTANT;
+  puti CONST_INT;
   putc CONST_CHAR;
   return 0;
 }
