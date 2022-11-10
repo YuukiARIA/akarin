@@ -42,6 +42,16 @@ static const struct keyword_t g_keywords[] = {
 };
 static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
 
+static const char g_esc_chars[256] = {
+  ['b'] = '\b',
+  ['e'] = '\x1B',
+  ['r'] = '\r',
+  ['n'] = '\n',
+  ['t'] = '\t',
+  ['\\'] = '\\',
+  ['\''] = '\''
+};
+
 static int  peek(lexer_t *lexer);
 static void succ(lexer_t *lexer);
 
@@ -153,22 +163,8 @@ static void lexer_lex_integer(lexer_t *lexer) {
 
 static int lex_escaped_char(lexer_t *lexer) {
   int c = peek(lexer);
-  switch (c) {
-  case 'r':
-    c = '\r';
-    break;
-  case 'n':
-    c = '\n';
-    break;
-  case 't':
-    c = '\t';
-    break;
-  case '\\':
-    c = '\\';
-    break;
-  case '\'':
-    c = '\'';
-    break;
+  if (g_esc_chars[c]) {
+    c = g_esc_chars[c];
   }
   succ(lexer);
   return c;
