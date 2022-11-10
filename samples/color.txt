@@ -1,0 +1,15 @@
+func esc() { putc '\e'; return 0; }
+func fg(c) { esc(); putc '['; puti c; putc 'm'; return 0; }
+
+func red() { fg(31); return 0; }
+func reset() { fg(0); return 0; }
+
+func putc2(c1, c2) { putc c1; putc c2; return 0; }
+func putc4(c1, c2, c3, c4) { putc2(c1, c2); putc2(c3, c4); return 0; }
+
+func main() {
+  red();
+  putc4('R', 'E', 'D', '\n');
+  reset();
+  return 0;
+}
