@@ -44,6 +44,7 @@ const char *ttype_to_string(ttype_t ttype) {
     CASE_RETURN(TT_KW_HALT);
     CASE_RETURN(TT_KW_FUNC);
     CASE_RETURN(TT_KW_RETURN);
+    CASE_RETURN(TT_KW_CONST);
     CASE_RETURN(TT_EOF);
   default:
     return "(UNDEFINED)";

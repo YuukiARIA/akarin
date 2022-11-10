@@ -30,6 +30,7 @@ typedef enum {
   NT_HALT,
   NT_FUNC,
   NT_FUNC_PARAM,
+  NT_CONST_STATEMENT
 } ntype_t;
 
 typedef struct node_t node_t;
@@ -61,6 +62,7 @@ node_t     *node_new_return(node_t *expr);
 node_t     *node_new_halt(void);
 node_t     *node_new_func(node_t *ident, node_t *param, node_t *body);
 node_t     *node_new_func_param(void);
+node_t     *node_new_const_statement(node_t *ident, node_t *value);
 
 void        node_release(node_t **pnode);
 

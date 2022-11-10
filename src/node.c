@@ -210,6 +210,13 @@ node_t *node_new_func_param(void) {
   return node_new(NT_FUNC_PARAM);
 }
 
+node_t *node_new_const_statement(node_t *ident, node_t *value) {
+  node_t *node = node_new(NT_CONST_STATEMENT);
+  node_add_child(node, ident);
+  node_add_child(node, value);
+  return node;
+}
+
 void node_add_child(node_t *node, node_t *child) {
   if (node->children_count == node->children_capacity) {
     node->children_capacity *= 2;
@@ -419,6 +426,11 @@ static void dump_rec(node_t *node, int indent) {
     for (int i = 0; i < node->children_count; ++i) {
       dump_rec(node->children[i], indent + 1);
     }
+    break;
+  case NT_CONST_STATEMENT:
+    puts_indent(indent, "Const-Statement");
+    dump_rec(node->children[0], indent + 1);
+    dump_rec(node->children[1], indent + 1);
     break;
   }
 }

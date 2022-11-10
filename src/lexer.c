@@ -39,6 +39,7 @@ static const struct keyword_t g_keywords[] = {
   { "halt",     TT_KW_HALT     },
   { "func",     TT_KW_FUNC     },
   { "return",   TT_KW_RETURN   },
+  { "const",    TT_KW_CONST    },
 };
 static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
 

@@ -29,6 +29,7 @@ static node_t *parse_array_statement(parser_t *parser);
 static node_t *parse_return_statement(parser_t *parser);
 static node_t *parse_halt_statement(parser_t *parser);
 static node_t *parse_func_statement(parser_t *parser);
+static node_t *parse_const_statement(parser_t *parser);
 static node_t *parse_expr_statement(parser_t *parser);
 static node_t *parse_expr(parser_t *parser);
 static node_t *parse_assign(parser_t *parser);
@@ -141,12 +142,14 @@ static node_t *parse_toplevel_statement(parser_t *parser) {
     return parse_array_statement(parser);
   case TT_KW_FUNC:
     return parse_func_statement(parser);
+  case TT_KW_CONST:
+    return parse_const_statement(parser);
   default:
     break;
   }
 
   location = lexer_get_location(parser->lexer);
-  fprintf(stderr, "error: unexpected '%s' (%s). Only 'array' or 'func' are allowed as toplevel statement. (line:%d,column:%d)\n",
+  fprintf(stderr, "error: unexpected '%s' (%s). Only 'array', 'func' or 'const' are allowed as toplevel statement. (line:%d,column:%d)\n",
 	  lexer_text(parser->lexer),
           ttype_to_string(lexer_ttype(parser->lexer)),
           location.line,
@@ -333,6 +336,21 @@ static node_t *parse_func_statement(parser_t *parser) {
   }
 
   return node_new_func(ident, param, body);
+}
+
+/*
+ * <<ConstStatement>> ::= 'const' <Ident> '=' <Integer> ';'
+ */
+static node_t *parse_const_statement(parser_t *parser) {
+  node_t *ident, *value;
+
+  expect(parser, TT_KW_CONST);
+  ident = parse_ident(parser);
+  expect(parser, TT_EQ);
+  value = parse_integer(parser);
+  expect(parser, TT_SEMICOLON);
+
+  return node_new_const_statement(ident, value);
 }
 
 static node_t *parse_expr_statement(parser_t *parser) {

@@ -46,6 +46,7 @@ typedef enum {
   TT_KW_HALT,
   TT_KW_FUNC,
   TT_KW_RETURN,
+  TT_KW_CONST,
 
   TT_EOF = -1,
 } ttype_t;
