@@ -19,6 +19,7 @@ static node_t *parse_block(parser_t *parser);
 static node_t *parse_statement(parser_t *parser);
 static node_t *parse_if_statement(parser_t *parser);
 static node_t *parse_while_statement(parser_t *parser);
+static node_t *parse_loop_statement(parser_t *parser);
 static node_t *parse_break_statement(parser_t *parser);
 static node_t *parse_continue_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
@@ -167,6 +168,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_if_statement(parser);
   case TT_KW_WHILE:
     return parse_while_statement(parser);
+  case TT_KW_LOOP:
+    return parse_loop_statement(parser);
   case TT_KW_BREAK:
     return parse_break_statement(parser);
   case TT_KW_CONTINUE:
@@ -215,6 +218,13 @@ static node_t *parse_while_statement(parser_t *parser) {
   body = parse_statement(parser);
 
   return node_new_while(cond, body);
+}
+
+static node_t *parse_loop_statement(parser_t *parser) {
+  node_t *body = NULL;
+  expect(parser, TT_KW_LOOP);
+  body = parse_statement(parser);
+  return node_new_loop_statement(body);
 }
 
 static node_t *parse_break_statement(parser_t *parser) {

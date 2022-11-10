@@ -41,6 +41,7 @@ static void gen_sequence(codegen_t *codegen, node_t *node);
 static void gen_expr_statement(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
+static void gen_loop_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
 static void gen_continue_statement(codegen_t *codegen, node_t *node);
 static void gen_putc_statement(codegen_t *codegen, node_t *node);
@@ -162,6 +163,10 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_WHILE:
     codegen->stack_depth = 0;
     gen_while_statement(codegen, node);
+    break;
+  case NT_LOOP_STATEMENT:
+    codegen->stack_depth = 0;
+    gen_loop_statement(codegen, node);
     break;
   case NT_BREAK:
     codegen->stack_depth = 0;
@@ -293,6 +298,28 @@ static void gen_while_statement(codegen_t *codegen, node_t *node) {
 
   emit_inst(codegen, OP_JMP, label_head);
   emit_inst(codegen, OP_LABEL, label_tail);
+}
+
+static void gen_loop_statement(codegen_t *codegen, node_t *node) {
+  node_t *body = node_get_child(node, 0);
+  int label_head = alloc_label_id(codegen);
+  int label_tail = alloc_label_id(codegen);
+  int label_head_before;
+  int label_tail_before;
+
+  label_head_before = codegen->cur_label_head;
+  label_tail_before = codegen->cur_label_tail;
+
+  codegen->cur_label_head = label_head;
+  codegen->cur_label_tail = label_tail;
+
+  emit_inst(codegen, OP_LABEL, label_head);
+  gen(codegen, body);
+  emit_inst(codegen, OP_JMP, label_head);
+  emit_inst(codegen, OP_LABEL, label_tail);
+
+  codegen->cur_label_head = label_head_before;
+  codegen->cur_label_tail = label_tail_before;
 }
 
 static void gen_break_statement(codegen_t *codegen, node_t *node) {
