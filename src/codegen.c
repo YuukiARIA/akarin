@@ -352,25 +352,30 @@ static void gen_for_statement(codegen_t *codegen, node_t *node) {
   codegen->cur_label_head = label_continue;
   codegen->cur_label_tail = label_break;
 
-  codegen->stack_depth = 0;
-  gen(codegen, init);
-  emit_inst(codegen, OP_POP, 0);
+  if (node_get_ntype(init) != NT_EMPTY) {
+    codegen->stack_depth = 0;
+    gen(codegen, init);
+    emit_inst(codegen, OP_POP, 0);
+  }
 
   emit_inst(codegen, OP_LABEL, label_head);
 
-  codegen->stack_depth = 0;
-  gen(codegen, cond);
-
-  emit_inst(codegen, OP_JZ, label_break);
+  if (node_get_ntype(cond) != NT_EMPTY) {
+    codegen->stack_depth = 0;
+    gen(codegen, cond);
+    emit_inst(codegen, OP_JZ, label_break);
+  }
 
   codegen->stack_depth = 0;
   gen(codegen, body);
 
   emit_inst(codegen, OP_LABEL, label_continue);
 
-  codegen->stack_depth = 0;
-  gen(codegen, next);
-  emit_inst(codegen, OP_POP, 0);
+  if (node_get_ntype(next) != NT_EMPTY) {
+    codegen->stack_depth = 0;
+    gen(codegen, next);
+    emit_inst(codegen, OP_POP, 0);
+  }
 
   emit_inst(codegen, OP_JMP, label_head);
   emit_inst(codegen, OP_LABEL, label_break);
