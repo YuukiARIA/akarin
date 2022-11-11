@@ -71,12 +71,12 @@ Func
 | +-Ident b
 +-Puti-Statement
 | +-Binary ADD
-| | +-Variable
-| | | +-Ident a
-| | +-Variable
-| | | +-Ident b
+|   +-Variable
+|   | +-Ident a
+|   +-Variable
+|     +-Ident b
 +-Putc-Statement
 | +-Integer 10
 +-Return
-| +-Integer 0
+  +-Integer 0
 ```
