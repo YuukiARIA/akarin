@@ -385,21 +385,16 @@ static void dump_rec(node_t *node, int indent) {
     break;
   case NT_IF:
     puts_indent(indent, "If-Statement");
-    puts_indent(indent + 1, "Condition");
-    dump_rec(node->cond, indent + 2);
-    puts_indent(indent + 1, "Then-Clause");
-    dump_rec(node->l, indent + 2);
+    dump_rec(node->cond, indent + 1);
+    dump_rec(node->l, indent + 1);
     if (node->r) {
-      puts_indent(indent + 1, "Else-Clause");
-      dump_rec(node->r, indent + 2);
+      dump_rec(node->r, indent + 1);
     }
     break;
   case NT_WHILE:
     puts_indent(indent, "While-Statement");
-    puts_indent(indent + 1, "Condition");
-    dump_rec(node->cond, indent + 2);
-    puts_indent(indent + 1, "Body");
-    dump_rec(node->l, indent + 2);
+    dump_rec(node->cond, indent + 1);
+    dump_rec(node->l, indent + 1);
     break;
   case NT_LOOP_STATEMENT:
     puts_indent(indent, "Loop-Statement");

@@ -192,13 +192,13 @@ static node_t *parse_if_statement(parser_t *parser) {
 
   expect(parser, TT_KW_IF);
   expect(parser, TT_LPAREN);
-  cond = parse_expr(parser);
+  cond = node_new_group(parse_expr(parser), "Condition");
   expect(parser, TT_RPAREN);
-  then = parse_statement(parser);
+  then = node_new_group(parse_statement(parser), "Then-Clause");
 
   if (is_ttype(parser, TT_KW_ELSE)) {
     lexer_next(parser->lexer);
-    els = parse_statement(parser);
+    els = node_new_group(parse_statement(parser), "Else-Clause");
   }
 
   return node_new_if(cond, then, els);
@@ -209,9 +209,9 @@ static node_t *parse_while_statement(parser_t *parser) {
 
   expect(parser, TT_KW_WHILE);
   expect(parser, TT_LPAREN);
-  cond = parse_expr(parser);
+  cond = node_new_group(parse_expr(parser), "Condition");
   expect(parser, TT_RPAREN);
-  body = parse_statement(parser);
+  body = node_new_group(parse_statement(parser), "Body-Clause");
 
   return node_new_while(cond, body);
 }
