@@ -59,7 +59,7 @@ static int  peek(lexer_t *lexer);
 static void succ(lexer_t *lexer);
 
 static void clear_buf(lexer_t *lexer) {
-  memset(lexer->text, 0, lexer->bufpos);
+  memset(lexer->text, 0, TEXT_BUF_SIZE);
   lexer->bufpos = 0;
 }
 
