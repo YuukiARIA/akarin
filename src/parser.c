@@ -114,25 +114,21 @@ static int expect(parser_t *parser, ttype_t ttype) {
 }
 
 static node_t *parse_program(parser_t *parser) {
-  node_t *root = node_new_empty(), *node = NULL;
+  node_t *seq = node_new_seq();
   while (!is_eof(parser)) {
-    node = parse_toplevel_statement(parser);
-    root = node_new_seq(root, node);
+    node_add_child(seq, parse_toplevel_statement(parser));
   }
-  return root;
+  return seq;
 }
 
 static node_t *parse_block(parser_t *parser) {
-  node_t *root = node_new_empty(), *node = NULL;
-
+  node_t *seq = node_new_seq();
   expect(parser, TT_LBRACE);
   while (!is_eof(parser) && !is_ttype(parser, TT_RBRACE)) {
-    node = parse_statement(parser);
-    root = node_new_seq(root, node);
+    node_add_child(seq, parse_statement(parser));
   }
   expect(parser, TT_RBRACE);
-
-  return root;
+  return seq;
 }
 
 static node_t *parse_toplevel_statement(parser_t *parser) {

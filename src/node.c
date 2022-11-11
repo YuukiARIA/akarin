@@ -63,11 +63,8 @@ node_t *node_new_empty(void) {
   return node_new(NT_EMPTY);
 }
 
-node_t *node_new_seq(node_t *first, node_t *second) {
-  node_t *node = node_new(NT_SEQ);
-  node->l = first;
-  node->r = second;
-  return node;
+node_t *node_new_seq(void) {
+  return node_new(NT_SEQ);
 }
 
 node_t *node_new_expr(node_t *expr) {
@@ -278,7 +275,12 @@ int node_is_assignable(node_t *node) {
 bool node_is_all_paths_ended_with_return(node_t *node) {
   switch (node->ntype) {
   case NT_SEQ:
-    return node_is_all_paths_ended_with_return(node->r);
+    for (int i = 0; i < node->children_count; ++i) {
+      if (node_is_all_paths_ended_with_return(node->children[i])) {
+	return true;
+      }
+    }
+    return false;
   case NT_IF:
     if (node->r) {
       return node_is_all_paths_ended_with_return(node->l) && node_is_all_paths_ended_with_return(node->r);
@@ -319,8 +321,9 @@ static void dump_rec(node_t *node, int indent) {
   case NT_EMPTY:
     break;
   case NT_SEQ:
-    dump_rec(node->l, indent);
-    dump_rec(node->r, indent);
+    for (int i = 0; i < node->children_count; ++i) {
+      dump_rec(node->children[i], indent);
+    }
     break;
   case NT_EXPR:
     puts_indent(indent, "Expr");

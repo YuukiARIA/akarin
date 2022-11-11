@@ -135,8 +135,9 @@ array_t *codegen_get_instructions(codegen_t *codegen) {
 static void collect_const_defs(codegen_t *codegen, node_t *node) {
   switch (node_get_ntype(node)) {
   case NT_SEQ:
-    collect_const_defs(codegen, node_get_l(node));
-    collect_const_defs(codegen, node_get_r(node));
+    for (int i = 0; i < node_get_child_count(node); ++i) {
+      collect_const_defs(codegen, node_get_child(node, i));
+    }
     break;
   case NT_CONST_STATEMENT:
     register_const(codegen, node_get_name(node_get_child(node, 0)), node_get_value(node_get_child(node, 1)));
@@ -237,8 +238,9 @@ static void gen(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_sequence(codegen_t *codegen, node_t *node) {
-  gen(codegen, node_get_l(node));
-  gen(codegen, node_get_r(node));
+  for (int i = 0; i < node_get_child_count(node); ++i) {
+    gen(codegen, node_get_child(node, i));
+  }
 }
 
 static void gen_expr_statement(codegen_t *codegen, node_t *node) {
