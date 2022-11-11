@@ -30,6 +30,7 @@ static const struct keyword_t g_keywords[] = {
   { "else",     TT_KW_ELSE     },
   { "while",    TT_KW_WHILE    },
   { "loop",     TT_KW_LOOP     },
+  { "for",      TT_KW_FOR      },
   { "break",    TT_KW_BREAK    },
   { "continue", TT_KW_CONTINUE },
   { "puti",     TT_KW_PUTI     },

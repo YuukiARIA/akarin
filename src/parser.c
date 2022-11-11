@@ -20,6 +20,7 @@ static node_t *parse_statement(parser_t *parser);
 static node_t *parse_if_statement(parser_t *parser);
 static node_t *parse_while_statement(parser_t *parser);
 static node_t *parse_loop_statement(parser_t *parser);
+static node_t *parse_for_statement(parser_t *parser);
 static node_t *parse_break_statement(parser_t *parser);
 static node_t *parse_continue_statement(parser_t *parser);
 static node_t *parse_puti(parser_t *parser);
@@ -166,6 +167,8 @@ static node_t *parse_statement(parser_t *parser) {
     return parse_while_statement(parser);
   case TT_KW_LOOP:
     return parse_loop_statement(parser);
+  case TT_KW_FOR:
+    return parse_for_statement(parser);
   case TT_KW_BREAK:
     return parse_break_statement(parser);
   case TT_KW_CONTINUE:
@@ -221,6 +224,35 @@ static node_t *parse_loop_statement(parser_t *parser) {
   expect(parser, TT_KW_LOOP);
   body = parse_statement(parser);
   return node_new_loop_statement(body);
+}
+
+static node_t *parse_for_statement(parser_t *parser) {
+  node_t *init, *cond, *next, *body;
+  expect(parser, TT_KW_FOR);
+  expect(parser, TT_LPAREN);
+  if (!is_ttype(parser, TT_SEMICOLON)) {
+    init = node_new_group(parse_expr(parser), "Init-Clause");
+  }
+  else {
+    init = node_new_empty();
+  }
+  expect(parser, TT_SEMICOLON);
+  if (!is_ttype(parser, TT_SEMICOLON)) {
+    cond = node_new_group(parse_expr(parser), "Condition-Clause");
+  }
+  else {
+    cond = node_new_empty();
+  }
+  expect(parser, TT_SEMICOLON);
+  if (!is_ttype(parser, TT_RPAREN)) {
+    next = node_new_group(parse_expr(parser), "Next-Clause");
+  }
+  else {
+    next = node_new_empty();
+  }
+  expect(parser, TT_RPAREN);
+  body = node_new_group(parse_statement(parser), "Body-Clause");
+  return node_new_for_statement(init, cond, next, body);
 }
 
 static node_t *parse_break_statement(parser_t *parser) {

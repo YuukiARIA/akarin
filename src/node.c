@@ -149,6 +149,15 @@ node_t *node_new_loop_statement(node_t *body) {
   return node;
 }
 
+node_t *node_new_for_statement(node_t *init, node_t *cond, node_t *next, node_t *body) {
+  node_t *node = node_new(NT_FOR_STATEMENT);
+  node_add_child(node, init);
+  node_add_child(node, cond);
+  node_add_child(node, next);
+  node_add_child(node, body);
+  return node;
+}
+
 node_t *node_new_break(void) {
   return node_new(NT_BREAK);
 }
@@ -367,6 +376,9 @@ static void dump_rec(node_t *node, int indent, uint64_t mask) {
     break;
   case NT_LOOP_STATEMENT:
     indent_puts(indent, mask, "Loop-Statement");
+    break;
+  case NT_FOR_STATEMENT:
+    indent_puts(indent, mask, "For-Statement");
     break;
   case NT_BREAK:
     indent_puts(indent, mask, "Break-Statement");

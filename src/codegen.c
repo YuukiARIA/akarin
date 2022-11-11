@@ -42,6 +42,7 @@ static void gen_expr_statement(codegen_t *codegen, node_t *node);
 static void gen_if_statement(codegen_t *codegen, node_t *node);
 static void gen_while_statement(codegen_t *codegen, node_t *node);
 static void gen_loop_statement(codegen_t *codegen, node_t *node);
+static void gen_for_statement(codegen_t *codegen, node_t *node);
 static void gen_break_statement(codegen_t *codegen, node_t *node);
 static void gen_continue_statement(codegen_t *codegen, node_t *node);
 static void gen_putc_statement(codegen_t *codegen, node_t *node);
@@ -171,6 +172,10 @@ static void gen(codegen_t *codegen, node_t *node) {
   case NT_LOOP_STATEMENT:
     codegen->stack_depth = 0;
     gen_loop_statement(codegen, node);
+    break;
+  case NT_FOR_STATEMENT:
+    codegen->stack_depth = 0;
+    gen_for_statement(codegen, node);
     break;
   case NT_BREAK:
     codegen->stack_depth = 0;
@@ -326,6 +331,49 @@ static void gen_loop_statement(codegen_t *codegen, node_t *node) {
   gen(codegen, body);
   emit_inst(codegen, OP_JMP, label_head);
   emit_inst(codegen, OP_LABEL, label_tail);
+
+  codegen->cur_label_head = label_head_before;
+  codegen->cur_label_tail = label_tail_before;
+}
+
+static void gen_for_statement(codegen_t *codegen, node_t *node) {
+  node_t *init = node_get_child(node, 0);
+  node_t *cond = node_get_child(node, 1);
+  node_t *next = node_get_child(node, 2);
+  node_t *body = node_get_child(node, 3);
+  int label_head = alloc_label_id(codegen);
+  int label_continue = alloc_label_id(codegen);
+  int label_break = alloc_label_id(codegen);
+  int label_head_before;
+  int label_tail_before;
+
+  label_head_before = codegen->cur_label_head;
+  label_tail_before = codegen->cur_label_tail;
+  codegen->cur_label_head = label_continue;
+  codegen->cur_label_tail = label_break;
+
+  codegen->stack_depth = 0;
+  gen(codegen, init);
+  emit_inst(codegen, OP_POP, 0);
+
+  emit_inst(codegen, OP_LABEL, label_head);
+
+  codegen->stack_depth = 0;
+  gen(codegen, cond);
+
+  emit_inst(codegen, OP_JZ, label_break);
+
+  codegen->stack_depth = 0;
+  gen(codegen, body);
+
+  emit_inst(codegen, OP_LABEL, label_continue);
+
+  codegen->stack_depth = 0;
+  gen(codegen, next);
+  emit_inst(codegen, OP_POP, 0);
+
+  emit_inst(codegen, OP_JMP, label_head);
+  emit_inst(codegen, OP_LABEL, label_break);
 
   codegen->cur_label_head = label_head_before;
   codegen->cur_label_tail = label_tail_before;
