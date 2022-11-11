@@ -49,7 +49,7 @@ node_t     *node_new_assign(node_t *lhs, node_t *rhs);
 node_t     *node_new_integer(int value);
 node_t     *node_new_ident(const char *name);
 node_t     *node_new_variable(node_t *ident);
-node_t     *node_new_array(node_t *var, node_t *indexer);
+node_t     *node_new_array(node_t *ident, node_t *indexer);
 node_t     *node_new_func_call(node_t *ident, node_t *arg);
 node_t     *node_new_func_call_arg(void);
 node_t     *node_new_if(node_t *cond, node_t *then, node_t *els);
@@ -78,9 +78,6 @@ unary_op_t  node_get_uop(node_t *node);
 binary_op_t node_get_bop(node_t *node);
 int         node_get_value(node_t *node);
 const char *node_get_name(node_t *node);
-node_t     *node_get_l(node_t *node);
-node_t     *node_get_r(node_t *node);
-node_t     *node_get_cond(node_t *node);
 int         node_is_assignable(node_t *node);
 
 bool        node_is_all_paths_ended_with_return(node_t *node);

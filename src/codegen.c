@@ -158,7 +158,7 @@ static void gen(codegen_t *codegen, node_t *node) {
     break;
   case NT_EXPR:
     codegen->stack_depth = 0;
-    gen_expr_statement(codegen, node_get_l(node));
+    gen_expr_statement(codegen, node_get_child(node, 0));
     break;
   case NT_IF:
     codegen->stack_depth = 0;
@@ -252,9 +252,13 @@ static void gen_expr_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_if_statement(codegen_t *codegen, node_t *node) {
-  node_t *cond = node_get_cond(node);
-  node_t *then = node_get_l(node);
-  node_t *els = node_get_r(node);
+  node_t *cond = node_get_child(node, 0);
+  node_t *then = node_get_child(node, 1);
+  node_t *els = NULL;
+
+  if (node_get_child_count(node) == 3) {
+    els = node_get_child(node, 2);
+  }
 
   if (els) {
     int l1 = alloc_label_id(codegen);
@@ -279,8 +283,8 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_while_statement(codegen_t *codegen, node_t *node) {
-  node_t *cond = node_get_cond(node);
-  node_t *body = node_get_l(node);
+  node_t *cond = node_get_child(node, 0);
+  node_t *body = node_get_child(node, 1);
   int label_head = alloc_label_id(codegen);
   int label_tail = alloc_label_id(codegen);
   int label_head_before;
@@ -348,17 +352,17 @@ static void gen_continue_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_putc_statement(codegen_t *codegen, node_t *node) {
-  gen(codegen, node_get_l(node));
+  gen(codegen, node_get_child(node, 0));
   emit_inst(codegen, OP_PUTC, 0);
 }
 
 static void gen_puti_statement(codegen_t *codegen, node_t *node) {
-  gen(codegen, node_get_l(node));
+  gen(codegen, node_get_child(node, 0));
   emit_inst(codegen, OP_PUTI, 0);
 }
 
 static void gen_getc_statement(codegen_t *codegen, node_t *node) {
-  node_t *ident = node_get_l(node);
+  node_t *ident = node_get_child(node, 0);
   const char *name = node_get_name(ident);
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
@@ -372,7 +376,7 @@ static void gen_getc_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_geti_statement(codegen_t *codegen, node_t *node) {
-  node_t *ident = node_get_l(node);
+  node_t *ident = node_get_child(node, 0);
   const char *name = node_get_name(ident);
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
@@ -386,8 +390,8 @@ static void gen_geti_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_array_decl_statement(codegen_t *codegen, node_t *node) {
-  node_t *ident = node_get_l(node);
-  node_t *capacity = node_get_r(node);
+  node_t *ident = node_get_child(node, 0);
+  node_t *capacity = node_get_child(node, 1);
   allocate(codegen, node_get_name(ident), node_get_value(capacity));
 }
 
@@ -430,14 +434,14 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
   switch (node_get_uop(node)) {
   case UOP_NEGATIVE: /* implement -x as 0 - x. */
     emit_inst(codegen, OP_PUSH, 0);
-    gen(codegen, node_get_l(node));
+    gen(codegen, node_get_child(node, 0));
     emit_inst(codegen, OP_SUB, 0);
     break;
   case UOP_NOT:
     {
       int l1 = alloc_label_id(codegen);
       int l2 = alloc_label_id(codegen);
-      gen(codegen, node_get_l(node));
+      gen(codegen, node_get_child(node, 0));
       emit_inst(codegen, OP_JZ, l1);
       emit_inst(codegen, OP_PUSH, 0);
       emit_inst(codegen, OP_JMP, l2);
@@ -452,8 +456,8 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_binary(codegen_t *codegen, node_t *node) {
-  gen(codegen, node_get_l(node));
-  gen(codegen, node_get_r(node));
+  gen(codegen, node_get_child(node, 0));
+  gen(codegen, node_get_child(node, 1));
 
   switch (node_get_bop(node)) {
   case BOP_ADD:
@@ -594,8 +598,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_assign(codegen_t *codegen, node_t *node) {
-  node_t *lhs = node_get_l(node);
-  node_t *expr = node_get_r(node);
+  node_t *lhs = node_get_child(node, 0);
+  node_t *expr = node_get_child(node, 1);
   node_t *ident;
   const char *name;
   varentry_t *varentry;
@@ -618,7 +622,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
     break;
   case NT_ARRAY:
-    ident = node_get_l(lhs);
+    ident = node_get_child(lhs, 0);
     name = node_get_name(ident);
     varentry = vartable_lookup_or_add_var(codegen->vartable, name);
     if (varentry_is_local(varentry)) {
@@ -627,7 +631,7 @@ static void gen_assign(codegen_t *codegen, node_t *node) {
     }
     emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
     codegen->stack_depth++;
-    gen(codegen, node_get_r(lhs));
+    gen(codegen, node_get_child(lhs, 1));
     emit_inst(codegen, OP_ADD, 0);
     codegen->stack_depth--;
     break;
@@ -664,7 +668,7 @@ static void gen_variable(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_array(codegen_t *codegen, node_t *node) {
-  node_t *ident = node_get_l(node);
+  node_t *ident = node_get_child(node, 0);
   const char *name = node_get_name(ident);
   varentry_t *varentry = vartable_lookup_or_add_var(codegen->vartable, name);
 
@@ -675,7 +679,7 @@ static void gen_array(codegen_t *codegen, node_t *node) {
 
   emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
   codegen->stack_depth++;
-  gen(codegen, node_get_r(node));
+  gen(codegen, node_get_child(node, 1));
   emit_inst(codegen, OP_ADD, 0);
   emit_inst(codegen, OP_LOAD, 0);
   codegen->stack_depth--;
