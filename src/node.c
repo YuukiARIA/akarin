@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "node.h"
 #include "utils/memory.h"
 
@@ -315,18 +316,26 @@ static void print_indent(int indent) {
   putchar('-');
 }
 
-static void puts_indent(int indent, const char *s) {
+static void indent_puts(int indent, const char *s) {
   print_indent(indent);
   puts(s);
+}
+
+static void indent_printf(int indent, const char *fmt, ...) {
+  print_indent(indent);
+  va_list args;
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
 }
 
 static void dump_rec(node_t *node, int indent) {
   switch (node->ntype) {
   case NT_INVALID:
-    puts_indent(indent, "Invalid");
+    indent_puts(indent, "Invalid");
     break;
   case NT_GROUP:
-    puts_indent(indent, node->name);
+    indent_puts(indent, node->name);
     dump_rec(node->children[0], indent + 1);
     break;
   case NT_EMPTY:
@@ -337,54 +346,50 @@ static void dump_rec(node_t *node, int indent) {
     }
     break;
   case NT_EXPR:
-    puts_indent(indent, "Expr");
+    indent_puts(indent, "Expr");
     dump_rec(node->l, indent + 1);
     break;
   case NT_UNARY:
-    print_indent(indent);
-    printf("Unary %s\n", unary_op_to_string(node->uop));
+    indent_printf(indent, "Unary %s\n", unary_op_to_string(node->uop));
     dump_rec(node->l, indent + 1);
     break;
   case NT_BINARY:
-    print_indent(indent);
-    printf("Binary %s\n", binary_op_to_string(node->bop));
+    indent_printf(indent, "Binary %s\n", binary_op_to_string(node->bop));
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
     break;
   case NT_ASSIGN:
-    puts_indent(indent, "Assign");
+    indent_puts(indent, "Assign");
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
   case NT_INTEGER:
-    print_indent(indent);
-    printf("Integer %d\n", node->value);
+    indent_printf(indent, "Integer %d\n", node->value);
     break;
   case NT_IDENT:
-    print_indent(indent);
-    printf("Ident %s\n", node->name);
+    indent_printf(indent, "Ident %s\n", node->name);
     break;
   case NT_VARIABLE:
-    puts_indent(indent, "Variable");
+    indent_puts(indent, "Variable");
     dump_rec(node->children[0], indent + 1);
     break;
   case NT_ARRAY:
-    puts_indent(indent, "Array");
+    indent_puts(indent, "Array");
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
     break;
   case NT_FUNC_CALL:
-    puts_indent(indent, "FuncCall");
+    indent_puts(indent, "FuncCall");
     dump_rec(node->children[0], indent + 1);
     dump_rec(node->children[1], indent + 1);
     break;
   case NT_FUNC_CALL_ARG:
-    puts_indent(indent, "FuncCallArg");
+    indent_puts(indent, "FuncCallArg");
     for (int i = 0; i < node->children_count; ++i) {
       dump_rec(node->children[i], indent + 1);
     }
     break;
   case NT_IF:
-    puts_indent(indent, "If-Statement");
+    indent_puts(indent, "If-Statement");
     dump_rec(node->cond, indent + 1);
     dump_rec(node->l, indent + 1);
     if (node->r) {
@@ -392,62 +397,62 @@ static void dump_rec(node_t *node, int indent) {
     }
     break;
   case NT_WHILE:
-    puts_indent(indent, "While-Statement");
+    indent_puts(indent, "While-Statement");
     dump_rec(node->cond, indent + 1);
     dump_rec(node->l, indent + 1);
     break;
   case NT_LOOP_STATEMENT:
-    puts_indent(indent, "Loop-Statement");
+    indent_puts(indent, "Loop-Statement");
     dump_rec(node->children[0], indent + 1);
     break;
   case NT_BREAK:
-    puts_indent(indent, "Break-Statement");
+    indent_puts(indent, "Break-Statement");
     break;
   case NT_CONTINUE:
-    puts_indent(indent, "Continue-Statement");
+    indent_puts(indent, "Continue-Statement");
     break;
   case NT_PUTI:
-    puts_indent(indent, "Puti-Statement");
+    indent_puts(indent, "Puti-Statement");
     dump_rec(node->l, indent + 1);
     break;
   case NT_PUTC:
-    puts_indent(indent, "Putc-Statement");
+    indent_puts(indent, "Putc-Statement");
     dump_rec(node->l, indent + 1);
     break;
   case NT_GETI:
-    puts_indent(indent, "Geti-Statement");
+    indent_puts(indent, "Geti-Statement");
     dump_rec(node->l, indent + 1);
     break;
   case NT_GETC:
-    puts_indent(indent, "Getc-Statement");
+    indent_puts(indent, "Getc-Statement");
     dump_rec(node->l, indent + 1);
     break;
   case NT_ARRAY_DECL:
-    puts_indent(indent, "ArrayDecl-Statement");
+    indent_puts(indent, "ArrayDecl-Statement");
     dump_rec(node->l, indent + 1);
     dump_rec(node->r, indent + 1);
     break;
   case NT_RETURN:
-    puts_indent(indent, "Return");
+    indent_puts(indent, "Return");
     dump_rec(node->children[0], indent + 1);
     break;
   case NT_HALT:
-    puts_indent(indent, "Halt-Statement");
+    indent_puts(indent, "Halt-Statement");
     break;
   case NT_FUNC:
-    puts_indent(indent, "Func");
+    indent_puts(indent, "Func");
     dump_rec(node->children[0], indent + 1);
     dump_rec(node->children[1], indent + 1);
     dump_rec(node->children[2], indent + 1);
     break;
   case NT_FUNC_PARAM:
-    puts_indent(indent, "FuncParam");
+    indent_puts(indent, "FuncParam");
     for (int i = 0; i < node->children_count; ++i) {
       dump_rec(node->children[i], indent + 1);
     }
     break;
   case NT_CONST_STATEMENT:
-    puts_indent(indent, "Const-Statement");
+    indent_puts(indent, "Const-Statement");
     dump_rec(node->children[0], indent + 1);
     dump_rec(node->children[1], indent + 1);
     break;
