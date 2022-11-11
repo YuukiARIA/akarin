@@ -70,7 +70,7 @@ int parser_get_total_error_count(parser_t *parser) {
 static binary_op_t ttype_to_binary_op(ttype_t ttype) {
   switch (ttype) {
   case TT_EQEQ:     return BOP_EQ;
-  case TT_EXCLA:    return BOP_NEQ;
+  case TT_EXCLAEQ:  return BOP_NEQ;
   case TT_LT:       return BOP_LT;
   case TT_LE:       return BOP_LE;
   case TT_GT:       return BOP_GT;
