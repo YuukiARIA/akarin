@@ -163,9 +163,35 @@ static void lexer_lex_integer(lexer_t *lexer) {
   lexer->ivalue = atoi(lexer->text);
 }
 
+static int hex_char_to_int(char x) {
+  if (isdigit(x)) {
+    return x - '0';
+  }
+  switch (toupper(x)) {
+  case 'A': return 10;
+  case 'B': return 11;
+  case 'C': return 12;
+  case 'D': return 13;
+  case 'E': return 14;
+  case 'F': return 15;
+  }
+  return 0;
+}
+
 static int lex_escaped_char(lexer_t *lexer) {
   int c = peek(lexer);
-  if (g_esc_chars[c]) {
+  if (c == 'x') {
+    succ(lexer);
+    if (isxdigit(peek(lexer))) {
+      c = hex_char_to_int(peek(lexer));
+      succ(lexer);
+    }
+    if (isxdigit(peek(lexer))) {
+      c = 16 * c + hex_char_to_int(peek(lexer));
+      succ(lexer);
+    }
+  }
+  else if (g_esc_chars[c]) {
     c = g_esc_chars[c];
   }
   succ(lexer);
