@@ -226,7 +226,7 @@ node_t *node_new_const_statement(node_t *ident, node_t *value) {
 void node_add_child(node_t *node, node_t *child) {
   if (node->children_count == node->children_capacity) {
     node->children_capacity *= 2;
-    node->children = (node_t **)AK_MEM_REALLOC(node->children, node->children_capacity);
+    node->children = (node_t **)AK_MEM_REALLOC(node->children, sizeof(node_t *) * node->children_capacity);
   }
   node->children[node->children_count++] = child;
 }
