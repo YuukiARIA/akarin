@@ -45,6 +45,7 @@ static const struct keyword_t g_keywords[] = {
 static const int g_keyword_count = sizeof(g_keywords) / sizeof(struct keyword_t);
 
 static const char g_esc_chars[256] = {
+  ['a'] = '\a',
   ['b'] = '\b',
   ['e'] = '\x1B',
   ['r'] = '\r',
