@@ -5,6 +5,7 @@
 
 typedef enum {
   NT_INVALID,
+  NT_GROUP,
   NT_EMPTY,
   NT_SEQ,
   NT_EXPR,
@@ -38,6 +39,7 @@ typedef struct node_t node_t;
 
 node_t     *node_new(ntype_t ntype);
 node_t     *node_new_invalid(void);
+node_t     *node_new_group(node_t *child, const char *group_label);
 node_t     *node_new_empty(void);
 node_t     *node_new_seq(void);
 node_t     *node_new_expr(node_t *expr);

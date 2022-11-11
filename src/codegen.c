@@ -149,6 +149,9 @@ static void collect_const_defs(codegen_t *codegen, node_t *node) {
 
 static void gen(codegen_t *codegen, node_t *node) {
   switch (node_get_ntype(node)) {
+  case NT_GROUP:
+    gen(codegen, node_get_child(node, 0));
+    break;
   case NT_SEQ:
     codegen->stack_depth = 0;
     gen_sequence(codegen, node);

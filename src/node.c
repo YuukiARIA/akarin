@@ -59,6 +59,13 @@ node_t *node_new_invalid(void) {
   return node_new(NT_INVALID);
 }
 
+node_t *node_new_group(node_t *child, const char *group_label) {
+  node_t *node = node_new(NT_GROUP);
+  node_add_child(node, child);
+  strncpy(node->name, group_label, VARIABLE_NAME_MAX);
+  return node;
+}
+
 node_t *node_new_empty(void) {
   return node_new(NT_EMPTY);
 }
@@ -317,6 +324,10 @@ static void dump_rec(node_t *node, int indent) {
   switch (node->ntype) {
   case NT_INVALID:
     puts_indent(indent, "Invalid");
+    break;
+  case NT_GROUP:
+    puts_indent(indent, node->name);
+    dump_rec(node->children[0], indent + 1);
     break;
   case NT_EMPTY:
     break;
