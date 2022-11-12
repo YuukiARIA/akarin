@@ -4,6 +4,7 @@
 #include <string.h>
 #include "parser.h"
 #include "codegen.h"
+#include "node_formatter.h"
 #include "inst.h"
 #include "emitter_ws.h"
 #include "emitter_pseudo.h"

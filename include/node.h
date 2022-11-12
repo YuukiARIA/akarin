@@ -83,5 +83,3 @@ const char *node_get_name(node_t *node);
 int         node_is_assignable(node_t *node);
 
 bool        node_is_all_paths_ended_with_return(node_t *node);
-
-void        node_dump_tree(node_t *node);
