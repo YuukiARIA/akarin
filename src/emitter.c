@@ -2,13 +2,24 @@
 #include "emitter.h"
 #include "inst.h"
 #include "utils/memory.h"
+#include "utils/array.h"
+
+static void emit(emitter_t *emitter, inst_t *inst);
 
 void emitter_release(emitter_t **pemitter) {
   AK_MEM_FREE(*pemitter);
   *pemitter = NULL;
 }
 
-void emit(emitter_t *emitter, inst_t *inst) {
+void emitter_emit_code(emitter_t *emitter, array_t *instructions) {
+  for (int i = 0; i < array_count(instructions); ++i) {
+    inst_t *inst = (inst_t *)array_get(instructions, i);
+    emit(emitter, inst);
+  }
+  emitter->end(emitter);
+}
+
+static void emit(emitter_t *emitter, inst_t *inst) {
   switch (inst->opcode) {
   case OP_PUSH:
     emitter->push(emitter, inst->operand);
@@ -83,8 +94,4 @@ void emit(emitter_t *emitter, inst_t *inst) {
     emitter->halt(emitter);
     break;
   }
-}
-
-void emit_end(emitter_t *emitter) {
-  emitter->end(emitter);
 }

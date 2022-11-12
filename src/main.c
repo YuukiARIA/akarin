@@ -69,13 +69,7 @@ static emitter_t *create_emitter(emit_mode_t emit_mode) {
 
 static void emit_code(array_t *insts, emit_mode_t emit_mode) {
   emitter_t *emitter = create_emitter(emit_mode);
-
-  for (int i = 0; i < array_count(insts); ++i) {
-    inst_t *inst = (inst_t *)array_get(insts, i);
-    emit(emitter, inst);
-  }
-  emit_end(emitter);
-
+  emitter_emit_code(emitter, insts);
   emitter_release(&emitter);
 }
 

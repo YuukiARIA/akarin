@@ -1,6 +1,7 @@
 #pragma once
 
 #include "inst.h"
+#include "utils/array.h"
 
 typedef struct emitter_t emitter_t;
 
@@ -33,9 +34,7 @@ struct emitter_t {
 };
 
 void emitter_release(emitter_t **pemitter);
-
-void emit(emitter_t *emitter, inst_t *inst);
-void emit_end(emitter_t *emitter);
+void emitter_emit_code(emitter_t *emitter, array_t *instructions);
 
 #define EMITTER_OVERRIDE_ONE(OBJ, PREFIX, INST) (OBJ).INST = PREFIX ## _ ## INST
 #define EMITTER_OVERRIDE(OBJ, PREFIX) \
