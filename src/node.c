@@ -6,39 +6,39 @@
 #include <stdarg.h>
 #include "node.h"
 #include "utils/memory.h"
+#include "utils/array.h"
 
 #define VARIABLE_NAME_MAX         ( 63 )
 #define INITIAL_CHILDREN_CAPACITY ( 4 )
 
 struct node_t {
-  ntype_t       ntype;
-  unary_op_t    uop;
-  binary_op_t   bop;
-  int           value;
-  char          name[VARIABLE_NAME_MAX + 1];
-  int           children_count;
-  int           children_capacity;
-  node_t      **children;
+  ntype_t      ntype;
+  unary_op_t   uop;
+  binary_op_t  bop;
+  int          value;
+  char         name[VARIABLE_NAME_MAX + 1];
+  array_t     *children;
 };
 
 node_t *node_new(ntype_t ntype) {
   node_t *node = (node_t *)AK_MEM_MALLOC(sizeof(node_t));
-  node->ntype             = ntype;
-  node->uop               = UOP_INVALID;
-  node->bop               = BOP_INVALID;
-  node->value             = 0;
-  node->children_count    = 0;
-  node->children_capacity = INITIAL_CHILDREN_CAPACITY;
-  node->children          = (node_t **)AK_MEM_CALLOC(node->children_capacity, sizeof(node_t *));
+  node->ntype    = ntype;
+  node->uop      = UOP_INVALID;
+  node->bop      = BOP_INVALID;
+  node->value    = 0;
+  node->children = array_new(INITIAL_CHILDREN_CAPACITY);
   return node;
 }
 
 void node_release(node_t **pnode) {
   node_t *node = *pnode;
-  for (int i = 0; i < node->children_count; ++i) {
-    node_release(&node->children[i]);
+
+  for (int i = 0; i < node_get_child_count(node); ++i) {
+    node_t *child = node_get_child(node, i);
+    node_release(&child);
   }
-  AK_MEM_FREE(node->children);
+  array_release(&node->children);
+
   AK_MEM_FREE(node);
   *pnode = NULL;
 }
@@ -227,19 +227,15 @@ node_t *node_new_const_statement(node_t *ident, node_t *value) {
 }
 
 void node_add_child(node_t *node, node_t *child) {
-  if (node->children_count == node->children_capacity) {
-    node->children_capacity *= 2;
-    node->children = (node_t **)AK_MEM_REALLOC(node->children, sizeof(node_t *) * node->children_capacity);
-  }
-  node->children[node->children_count++] = child;
+  array_append(node->children, child);
 }
 
 node_t *node_get_child(node_t *node, int i) {
-  return node->children[i];
+  return (node_t *)array_get(node->children, i);
 }
 
 int node_get_child_count(node_t *node) {
-  return node->children_count;
+  return array_count(node->children);
 }
 
 ntype_t node_get_ntype(node_t *node) {
@@ -269,15 +265,18 @@ int node_is_assignable(node_t *node) {
 bool node_is_all_paths_ended_with_return(node_t *node) {
   switch (node->ntype) {
   case NT_SEQ:
-    for (int i = 0; i < node->children_count; ++i) {
-      if (node_is_all_paths_ended_with_return(node->children[i])) {
+    for (int i = 0; i < node_get_child_count(node); ++i) {
+      node_t *child = node_get_child(node, i);
+      if (node_is_all_paths_ended_with_return(child)) {
 	return true;
       }
     }
     return false;
   case NT_IF:
-    if (node->children_count == 3) {
-      return node_is_all_paths_ended_with_return(node->children[1]) && node_is_all_paths_ended_with_return(node->children[2]);
+    if (node_get_child_count(node) == 3) {
+      node_t *then = node_get_child(node, 1);
+      node_t *els = node_get_child(node, 2);
+      return node_is_all_paths_ended_with_return(then) && node_is_all_paths_ended_with_return(els);
     }
     return false;
   case NT_RETURN:
@@ -307,8 +306,9 @@ static void indent_puts(int indent, uint64_t mask, const char *s) {
 }
 
 static void indent_printf(int indent, uint64_t mask, const char *fmt, ...) {
-  print_indent(indent, mask);
   va_list args;
+
+  print_indent(indent, mask);
   va_start(args, fmt);
   vprintf(fmt, args);
   va_end(args);
@@ -317,9 +317,10 @@ static void indent_printf(int indent, uint64_t mask, const char *fmt, ...) {
 static void dump_rec(node_t *node, int indent, uint64_t mask);
 
 static void dump_children(node_t *node, int indent, uint64_t mask) {
-  for (int i = 0; i < node->children_count; ++i) {
-    bool is_last = i == node->children_count - 1;
-    dump_rec(node->children[i], indent, mask | !is_last);
+  int count = node_get_child_count(node);
+  for (int i = 0; i < count; ++i) {
+    bool is_last = i == count - 1;
+    dump_rec(node_get_child(node, i), indent, mask | !is_last);
   }
 }
 
