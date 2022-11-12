@@ -27,3 +27,22 @@ const char *binary_op_to_string(binary_op_t bop) {
   default:      return "INVALID";
   }
 }
+
+binary_op_t ttype_to_binary_op(ttype_t ttype) {
+  switch (ttype) {
+  case TT_EQEQ:     return BOP_EQ;
+  case TT_EXCLAEQ:  return BOP_NEQ;
+  case TT_LT:       return BOP_LT;
+  case TT_LE:       return BOP_LE;
+  case TT_GT:       return BOP_GT;
+  case TT_GE:       return BOP_GE;
+  case TT_PLUS:     return BOP_ADD;
+  case TT_MINUS:    return BOP_SUB;
+  case TT_ASTERISK: return BOP_MUL;
+  case TT_SLASH:    return BOP_DIV;
+  case TT_PERCENT:  return BOP_MOD;
+  case TT_AMP:      return BOP_AND;
+  case TT_BAR:      return BOP_OR;
+  default:          return BOP_INVALID;
+  }
+}

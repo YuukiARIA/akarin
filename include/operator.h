@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ttype.h"
+
 typedef enum {
   UOP_INVALID,
   UOP_POSITIVE,
@@ -26,3 +28,4 @@ typedef enum {
 
 const char *unary_op_to_string(unary_op_t uop);
 const char *binary_op_to_string(binary_op_t bop);
+binary_op_t ttype_to_binary_op(ttype_t ttype);

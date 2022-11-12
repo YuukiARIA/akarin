@@ -10,7 +10,6 @@ struct parser_t {
   int      error_count;
 };
 
-static binary_op_t ttype_to_binary_op(ttype_t ttype);
 static int     is_eof(parser_t *parser);
 static int     is_ttype(parser_t *parser, ttype_t ttype);
 static node_t *parse_program(parser_t *parser);
@@ -66,25 +65,6 @@ node_t *parser_parse(parser_t *parser) {
 
 int parser_get_total_error_count(parser_t *parser) {
   return lexer_get_error_count(parser->lexer) + parser->error_count;
-}
-
-static binary_op_t ttype_to_binary_op(ttype_t ttype) {
-  switch (ttype) {
-  case TT_EQEQ:     return BOP_EQ;
-  case TT_EXCLAEQ:  return BOP_NEQ;
-  case TT_LT:       return BOP_LT;
-  case TT_LE:       return BOP_LE;
-  case TT_GT:       return BOP_GT;
-  case TT_GE:       return BOP_GE;
-  case TT_PLUS:     return BOP_ADD;
-  case TT_MINUS:    return BOP_SUB;
-  case TT_ASTERISK: return BOP_MUL;
-  case TT_SLASH:    return BOP_DIV;
-  case TT_PERCENT:  return BOP_MOD;
-  case TT_AMP:      return BOP_AND;
-  case TT_BAR:      return BOP_OR;
-  default:          return BOP_INVALID;
-  }
 }
 
 static int is_eof(parser_t *parser) {
