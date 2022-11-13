@@ -653,43 +653,30 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
 static void gen_assign(codegen_t *codegen, node_t *node) {
   node_t *lhs = node_get_child(node, 0);
   node_t *expr = node_get_child(node, 1);
-  node_t *ident;
-  const char *name;
+  node_t *ident = node_get_child(lhs, 0);
+  const char *name = node_get_name(ident);
   varentry_t *varentry;
+
+  if (lookup_const(codegen, name)) {
+    error(codegen, "error: cannot assign to '%s' defined as a constant.\n", name);
+    return;
+  }
+
+  varentry = vartable_lookup_or_add_var(codegen->vartable, name);
+  if (varentry_is_local(varentry)) {
+    error(codegen, "error: function parameter '%s' is readonly.\n", name);
+    return;
+  }
 
   gen(codegen, expr);
 
-  switch (node_get_ntype(lhs)) {
-  case NT_VARIABLE:
-    ident = node_get_child(lhs, 0);
-    name = node_get_name(ident);
-    if (lookup_const(codegen, name)) {
-      error(codegen, "error: cannot assign to '%s' defined as a constant.\n", name);
-      return;
-    }
-    varentry = vartable_lookup_or_add_var(codegen->vartable, name);
-    if (varentry_is_local(varentry)) {
-      error(codegen, "error: function parameter '%s' is readonly.\n", name);
-      return;
-    }
-    emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
-    break;
-  case NT_ARRAY:
-    ident = node_get_child(lhs, 0);
-    name = node_get_name(ident);
-    varentry = vartable_lookup_or_add_var(codegen->vartable, name);
-    if (varentry_is_local(varentry)) {
-      error(codegen, "error: function parameter '%s' is readonly.\n", name);
-      return;
-    }
-    emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
+  emit_inst(codegen, OP_PUSH, varentry_get_offset(varentry));
+
+  if (node_get_ntype(lhs) == NT_ARRAY) {
     codegen->stack_depth++;
     gen(codegen, node_get_child(lhs, 1));
     emit_inst(codegen, OP_ADD, 0);
     codegen->stack_depth--;
-    break;
-  default:
-    return;
   }
 
   emit_inst(codegen, OP_COPY, 1);
