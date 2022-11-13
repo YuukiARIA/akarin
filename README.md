@@ -63,20 +63,20 @@ Not to transpile into Whitespace but to show parsed (abstract) syntax tree.
 ```
 $ akarin -d samples/00_hello.txt
 Func
-+-Ident main
-+-FuncParam
-+-Geti-Statement
-| +-Ident a
-+-Geti-Statement
-| +-Ident b
-+-Puti-Statement
-| +-Binary ADD
-|   +-Variable
-|   | +-Ident a
-|   +-Variable
-|     +-Ident b
-+-Putc-Statement
-| +-Integer 10
-+-Return
-  +-Integer 0
+├─Ident main
+├─FuncParam
+├─Geti-Statement
+│ └─Ident a
+├─Geti-Statement
+│ └─Ident b
+├─Puti-Statement
+│ └─Binary ADD
+│   ├─Variable
+│   │ └─Ident a
+│   └─Variable
+│     └─Ident b
+├─Putc-Statement
+│ └─Integer 10
+└─Return
+  └─Integer 0
 ```
