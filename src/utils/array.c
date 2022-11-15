@@ -2,8 +2,6 @@
 #include "utils/array.h"
 #include "utils/memory.h"
 
-typedef struct array_t array_t;
-
 struct array_t {
   int    count;
   int    capacity;
