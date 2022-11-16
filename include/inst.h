@@ -3,6 +3,7 @@
 #include "label.h"
 
 typedef enum {
+  OP_NOP,
   OP_PUSH,
   OP_COPY,
   OP_SLIDE,
@@ -37,6 +38,7 @@ typedef struct {
   };
 } inst_t;
 
+inst_t *inst_new_nop(void);
 inst_t *inst_new_push(int value);
 inst_t *inst_new_copy(int value);
 inst_t *inst_new_slide(int value);

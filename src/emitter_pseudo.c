@@ -27,6 +27,9 @@ emitter_t *emitter_pseudo_new(int indent) {
 
 static void pseudo_emit(emitter_t *self, inst_t *inst) {
   switch (inst->opcode) {
+  case OP_NOP:
+    indent_printf(self, "NOP\n");
+    break;
   case OP_PUSH:
     indent_printf(self, "PUSH %d\n", inst->value);
     break;

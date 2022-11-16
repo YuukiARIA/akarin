@@ -19,6 +19,10 @@ static inst_t *inst_new_with_label(opcode_t opcode, label_t *label) {
   return inst;
 }
 
+inst_t *inst_new_nop(void) {
+  return inst_new(OP_NOP);
+}
+
 inst_t *inst_new_push(int value) {
   return inst_new_with_value(OP_PUSH, value);
 }

@@ -33,6 +33,8 @@ emitter_t *emitter_ws_new(char space, char tab, char newline) {
 
 static void ws_emit(emitter_t *self, inst_t *inst) {
   switch (inst->opcode) {
+  case OP_NOP:
+    break;
   case OP_PUSH:
     emit_chars(self, "SS");
     encode_integer(self, inst->value);
