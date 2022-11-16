@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "opcode.h"
 #include "emitter.h"
 #include "label.h"
 #include "utils/memory.h"
@@ -30,90 +31,25 @@ emitter_t *emitter_ws_new(char space, char tab, char newline) {
   return (emitter_t *)emitter;
 }
 
-
 static void ws_emit(emitter_t *self, inst_t *inst) {
+  if (inst->opcode != OP_NOP) {
+    emit_chars(self, opcode_to_ws(inst->opcode));
+  }
+
   switch (inst->opcode) {
-  case OP_NOP:
-    break;
   case OP_PUSH:
-    emit_chars(self, "SS");
-    encode_integer(self, inst->value);
-    break;
   case OP_COPY:
-    emit_chars(self, "STS");
-    encode_integer(self, inst->value);
-    break;
   case OP_SLIDE:
-    emit_chars(self, "STL");
     encode_integer(self, inst->value);
-    break;
-  case OP_DUP:
-    emit_chars(self, "SLS");
-    break;
-  case OP_POP:
-    emit_chars(self, "SLL");
-    break;
-  case OP_SWAP:
-    emit_chars(self, "SLT");
-    break;
-  case OP_ADD:
-    emit_chars(self, "TSSS");
-    break;
-  case OP_SUB:
-    emit_chars(self, "TSST");
-    break;
-  case OP_MUL:
-    emit_chars(self, "TSSL");
-    break;
-  case OP_DIV:
-    emit_chars(self, "TSTS");
-    break;
-  case OP_MOD:
-    emit_chars(self, "TSTT");
-    break;
-  case OP_STORE:
-    emit_chars(self, "TTS");
-    break;
-  case OP_LOAD:
-    emit_chars(self, "TTT");
-    break;
-  case OP_PUTC:
-    emit_chars(self, "TLSS");
-    break;
-  case OP_PUTI:
-    emit_chars(self, "TLST");
-    break;
-  case OP_GETC:
-    emit_chars(self, "TLTS");
-    break;
-  case OP_GETI:
-    emit_chars(self, "TLTT");
     break;
   case OP_LABEL:
-    emit_chars(self, "LSS");
-    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
-    break;
   case OP_CALL:
-    emit_chars(self, "LST");
-    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
-    break;
   case OP_JMP:
-    emit_chars(self, "LSL");
-    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
-    break;
   case OP_JZ:
-    emit_chars(self, "LTS");
-    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
-    break;
   case OP_JNEG:
-    emit_chars(self, "LTT");
     encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
-  case OP_RET:
-    emit_chars(self, "LTL");
-    break;
-  case OP_HALT:
-    emit_chars(self, "LLL");
+  default:
     break;
   }
 }
