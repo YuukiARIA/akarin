@@ -112,6 +112,19 @@ void codegen_release(codegen_t **pcodegen) {
   *pcodegen = NULL;
 }
 
+static void unify_labels(codegen_t *codegen) {
+  array_t *insts = codegen->insts;
+
+  for (int i = 0; i < array_count(insts) - 1; ++i) {
+    inst_t *inst1 = (inst_t *)array_get(insts, i);
+    inst_t *inst2 = (inst_t *)array_get(insts, i + 1);
+    if (inst1->opcode == OP_LABEL && inst2->opcode == OP_LABEL) {
+      label_unify(inst1->label, inst2->label);
+      inst1->opcode = OP_NOP;
+    }
+  }
+}
+
 void codegen_generate(codegen_t *codegen) {
   func_def_t *func_main = lookup_or_register_func(codegen, "main");
 
@@ -126,13 +139,7 @@ void codegen_generate(codegen_t *codegen) {
     error(codegen, "error: function 'main' is not defined.\n");
   }
 
-  for (int i = 0; i < array_count(codegen->insts) - 1; ++i) {
-    inst_t *inst1 = (inst_t *)array_get(codegen->insts, i);
-    inst_t *inst2 = (inst_t *)array_get(codegen->insts, i + 1);
-    if (inst1->opcode == OP_LABEL && inst2->opcode == OP_LABEL) {
-      label_unify(inst1->label, inst2->label);
-    }
-  }
+  unify_labels(codegen);
 }
 
 int codegen_get_error_count(codegen_t *codegen) {
