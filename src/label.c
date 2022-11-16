@@ -55,13 +55,10 @@ static label_t *get_root(label_t *label) {
   return l;
 }
 
-void ltable_unify(ltable_t *ltable, int label_id1, int label_id2) {
-  array_t *labels = ltable->labels;
-  label_t *l1 = array_get(labels, label_id1);
-  label_t *l2 = array_get(labels, label_id2);
-  l1 = get_root(l1);
-  l2 = get_root(l2);
-  l2->parent = l1;
+void label_unify(label_t *label1, label_t *label2) {
+  label1 = get_root(label1);
+  label2 = get_root(label2);
+  label2->parent = label1;
 }
 
 int label_get_id(label_t *label) {

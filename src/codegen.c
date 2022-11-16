@@ -125,6 +125,14 @@ void codegen_generate(codegen_t *codegen) {
   if (!func_main->resolved) {
     error(codegen, "error: function 'main' is not defined.\n");
   }
+
+  for (int i = 0; i < array_count(codegen->insts) - 1; ++i) {
+    inst_t *inst1 = (inst_t *)array_get(codegen->insts, i);
+    inst_t *inst2 = (inst_t *)array_get(codegen->insts, i + 1);
+    if (inst1->opcode == OP_LABEL && inst2->opcode == OP_LABEL) {
+      label_unify(inst1->label, inst2->label);
+    }
+  }
 }
 
 int codegen_get_error_count(codegen_t *codegen) {
