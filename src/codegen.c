@@ -6,6 +6,7 @@
 #include "codegen.h"
 #include "node.h"
 #include "vartable.h"
+#include "label.h"
 #include "operator.h"
 #include "inst.h"
 #include "utils/memory.h"
@@ -25,6 +26,7 @@ typedef struct {
 struct codegen_t {
   node_t     *root;
   int         label_count;
+  ltable_t   *ltable;
   vartable_t *vartable;
   array_t    *consts;
   array_t    *funcs;
@@ -70,6 +72,7 @@ codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
   codegen->root = root;
   codegen->label_count = 0;
+  codegen->ltable = ltable_new();
   codegen->vartable = vartable_new(NULL);
   codegen->consts = array_new(64);
   codegen->funcs = array_new(64);
@@ -84,6 +87,7 @@ codegen_t *codegen_new(node_t *root) {
 void codegen_release(codegen_t **pcodegen) {
   codegen_t *c = *pcodegen;
 
+  ltable_release(&c->ltable);
   vartable_release(&c->vartable);
 
   for (int i = 0; i < array_count(c->consts); ++i) {
