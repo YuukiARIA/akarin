@@ -18,9 +18,9 @@ typedef struct {
 } const_def_t;
 
 typedef struct {
-  char *name;
-  int   label;
-  bool  resolved;
+  char    *name;
+  label_t *label;
+  bool     resolved;
 } func_def_t;
 
 struct codegen_t {
@@ -29,8 +29,8 @@ struct codegen_t {
   vartable_t *vartable;
   array_t    *consts;
   array_t    *funcs;
-  int         cur_label_head;
-  int         cur_label_tail;
+  label_t    *label_continue;
+  label_t    *label_break;
   int         stack_depth;
   array_t    *insts;
   int         error_count;
@@ -60,7 +60,7 @@ static void gen_variable(codegen_t *codegen, node_t *node);
 static void gen_array(codegen_t *codegen, node_t *node);
 static void gen_func_call(codegen_t *codegen, node_t *node);
 static void emit_inst(codegen_t *codegen, inst_t *inst);
-static int  alloc_label_id(codegen_t *codegen);
+static label_t *alloc_label(codegen_t *codegen);
 static int  allocate(codegen_t *codegen, const char *name, int size);
 static void register_const(codegen_t *codegen, const char *name, int value);
 static const_def_t *lookup_const(codegen_t *codegen, const char *name);
@@ -74,8 +74,8 @@ codegen_t *codegen_new(node_t *root) {
   codegen->vartable = vartable_new(NULL);
   codegen->consts = array_new(64);
   codegen->funcs = array_new(64);
-  codegen->cur_label_head = -1;
-  codegen->cur_label_tail = -1;
+  codegen->label_continue = NULL;
+  codegen->label_break = NULL;
   codegen->stack_depth = 0;
   codegen->insts = array_new(256);
   codegen->error_count = 0;
@@ -268,8 +268,8 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
   }
 
   if (els) {
-    int l1 = alloc_label_id(codegen);
-    int l2 = alloc_label_id(codegen);
+    label_t *l1 = alloc_label(codegen);
+    label_t *l2 = alloc_label(codegen);
 
     gen(codegen, cond);
     emit_inst(codegen, inst_new_jz(l1));
@@ -280,7 +280,7 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
     emit_inst(codegen, inst_new_label(l2));
   }
   else {
-    int l = alloc_label_id(codegen);
+    label_t *l = alloc_label(codegen);
 
     gen(codegen, cond);
     emit_inst(codegen, inst_new_jz(l));
@@ -292,50 +292,46 @@ static void gen_if_statement(codegen_t *codegen, node_t *node) {
 static void gen_while_statement(codegen_t *codegen, node_t *node) {
   node_t *cond = node_get_child(node, 0);
   node_t *body = node_get_child(node, 1);
-  int label_head = alloc_label_id(codegen);
-  int label_tail = alloc_label_id(codegen);
-  int label_head_before;
-  int label_tail_before;
+  label_t *label_continue = alloc_label(codegen);
+  label_t *label_break = alloc_label(codegen);
+  label_t *label_continue_before;
+  label_t *label_break_before;
 
-  emit_inst(codegen, inst_new_label(label_head));
+  label_continue_before = codegen->label_continue;
+  label_break_before = codegen->label_break;
+  codegen->label_continue = label_continue;
+  codegen->label_break = label_break;
+
+  emit_inst(codegen, inst_new_label(label_continue));
   gen(codegen, cond);
-  emit_inst(codegen, inst_new_jz(label_tail));
-
-  label_head_before = codegen->cur_label_head;
-  label_tail_before = codegen->cur_label_tail;
-
-  codegen->cur_label_head = label_head;
-  codegen->cur_label_tail = label_tail;
-
+  emit_inst(codegen, inst_new_jz(label_break));
   gen(codegen, body);
+  emit_inst(codegen, inst_new_jmp(label_continue));
+  emit_inst(codegen, inst_new_label(label_break));
 
-  codegen->cur_label_head = label_head_before;
-  codegen->cur_label_tail = label_tail_before;
-
-  emit_inst(codegen, inst_new_jmp(label_head));
-  emit_inst(codegen, inst_new_label(label_tail));
+  codegen->label_continue = label_continue_before;
+  codegen->label_break = label_break_before;
 }
 
 static void gen_loop_statement(codegen_t *codegen, node_t *node) {
   node_t *body = node_get_child(node, 0);
-  int label_head = alloc_label_id(codegen);
-  int label_tail = alloc_label_id(codegen);
-  int label_head_before;
-  int label_tail_before;
+  label_t *label_continue = alloc_label(codegen);
+  label_t *label_break = alloc_label(codegen);
+  label_t *label_continue_before;
+  label_t *label_break_before;
 
-  label_head_before = codegen->cur_label_head;
-  label_tail_before = codegen->cur_label_tail;
+  label_continue_before = codegen->label_continue;
+  label_break_before = codegen->label_break;
+  codegen->label_continue = label_continue;
+  codegen->label_break = label_break;
 
-  codegen->cur_label_head = label_head;
-  codegen->cur_label_tail = label_tail;
-
-  emit_inst(codegen, inst_new_label(label_head));
+  emit_inst(codegen, inst_new_label(label_continue));
   gen(codegen, body);
-  emit_inst(codegen, inst_new_jmp(label_head));
-  emit_inst(codegen, inst_new_label(label_tail));
+  emit_inst(codegen, inst_new_jmp(label_continue));
+  emit_inst(codegen, inst_new_label(label_break));
 
-  codegen->cur_label_head = label_head_before;
-  codegen->cur_label_tail = label_tail_before;
+  codegen->label_continue = label_continue_before;
+  codegen->label_break = label_break_before;
 }
 
 static void gen_for_statement(codegen_t *codegen, node_t *node) {
@@ -343,16 +339,16 @@ static void gen_for_statement(codegen_t *codegen, node_t *node) {
   node_t *cond = node_get_child(node, 1);
   node_t *next = node_get_child(node, 2);
   node_t *body = node_get_child(node, 3);
-  int label_head = alloc_label_id(codegen);
-  int label_continue = alloc_label_id(codegen);
-  int label_break = alloc_label_id(codegen);
-  int label_head_before;
-  int label_tail_before;
+  label_t *label_head = alloc_label(codegen);
+  label_t *label_continue = alloc_label(codegen);
+  label_t *label_break = alloc_label(codegen);
+  label_t *label_continue_before;
+  label_t *label_break_before;
 
-  label_head_before = codegen->cur_label_head;
-  label_tail_before = codegen->cur_label_tail;
-  codegen->cur_label_head = label_continue;
-  codegen->cur_label_tail = label_break;
+  label_continue_before = codegen->label_continue;
+  label_break_before = codegen->label_break;
+  codegen->label_continue = label_continue;
+  codegen->label_break = label_break;
 
   if (node_get_ntype(init) != NT_EMPTY) {
     codegen->stack_depth = 0;
@@ -382,13 +378,13 @@ static void gen_for_statement(codegen_t *codegen, node_t *node) {
   emit_inst(codegen, inst_new_jmp(label_head));
   emit_inst(codegen, inst_new_label(label_break));
 
-  codegen->cur_label_head = label_head_before;
-  codegen->cur_label_tail = label_tail_before;
+  codegen->label_continue = label_continue_before;
+  codegen->label_break = label_break_before;
 }
 
 static void gen_break_statement(codegen_t *codegen, node_t *node) {
-  int label = codegen->cur_label_tail;
-  if (label == -1) {
+  label_t *label = codegen->label_break;
+  if (!label) {
     error(codegen, "error: illegal break statement.\n");
     return;
   }
@@ -397,9 +393,9 @@ static void gen_break_statement(codegen_t *codegen, node_t *node) {
 }
 
 static void gen_continue_statement(codegen_t *codegen, node_t *node) {
-  int label = codegen->cur_label_head;
-  if (label == -1) {
-    error(codegen, "error: illegal break statement.\n");
+  label_t *label = codegen->label_continue;
+  if (!label) {
+    error(codegen, "error: illegal continue statement.\n");
     return;
   }
 
@@ -494,8 +490,8 @@ static void gen_unary(codegen_t *codegen, node_t *node) {
     break;
   case UOP_NOT:
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       gen(codegen, node_get_child(node, 0));
       emit_inst(codegen, inst_new_jz(l1));
       emit_inst(codegen, inst_new_push(0));
@@ -532,9 +528,9 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_OR:
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
-      int l3 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
+      label_t *l3 = alloc_label(codegen);
       emit_inst(codegen, inst_new_jz(l1));
       emit_inst(codegen, inst_new_pop());
       emit_inst(codegen, inst_new_push(1));
@@ -550,10 +546,10 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_AND:
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
-      int l3 = alloc_label_id(codegen);
-      int l4 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
+      label_t *l3 = alloc_label(codegen);
+      label_t *l4 = alloc_label(codegen);
       emit_inst(codegen, inst_new_jz(l1));
       emit_inst(codegen, inst_new_jz(l2));
       emit_inst(codegen, inst_new_jmp(l3));
@@ -569,8 +565,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_EQ:
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jz(l1));
       emit_inst(codegen, inst_new_push(0));
@@ -582,8 +578,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_NEQ:
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jz(l1));
       emit_inst(codegen, inst_new_push(1));
@@ -595,8 +591,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_LT: /* x < y --> x - y < 0 */
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jneg(l1));
       emit_inst(codegen, inst_new_push(0));
@@ -608,8 +604,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_LE: /* x <= y --> !(y - x < 0) */
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_swap());
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jneg(l1));
@@ -622,8 +618,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_GT: /* x > y --> y - x < 0 */
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_swap());
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jneg(l1));
@@ -636,8 +632,8 @@ static void gen_binary(codegen_t *codegen, node_t *node) {
     break;
   case BOP_GE: /* x >= y --> !(x - y < 0) */
     {
-      int l1 = alloc_label_id(codegen);
-      int l2 = alloc_label_id(codegen);
+      label_t *l1 = alloc_label(codegen);
+      label_t *l2 = alloc_label(codegen);
       emit_inst(codegen, inst_new_sub());
       emit_inst(codegen, inst_new_jneg(l1));
       emit_inst(codegen, inst_new_push(1));
@@ -746,9 +742,8 @@ static void emit_inst(codegen_t *codegen, inst_t *inst) {
   array_append(codegen->insts, inst);
 }
 
-static int alloc_label_id(codegen_t *codegen) {
-  label_t *label = ltable_alloc(codegen->ltable);
-  return label_get_id(label);
+static label_t *alloc_label(codegen_t *codegen) {
+  return ltable_alloc(codegen->ltable);
 }
 
 static int allocate(codegen_t *codegen, const char *name, int size) {
@@ -792,7 +787,7 @@ static func_def_t *lookup_or_register_func(codegen_t *codegen, const char *name)
 
   func = (func_def_t *)AK_MEM_MALLOC(sizeof(func_def_t));
   func->name = AK_MEM_STRDUP(name);
-  func->label = alloc_label_id(codegen);
+  func->label = alloc_label(codegen);
   func->resolved = false;
   array_append(codegen->funcs, func);
   return func;

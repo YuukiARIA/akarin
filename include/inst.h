@@ -1,5 +1,7 @@
 #pragma once
 
+#include "label.h"
+
 typedef enum {
   OP_PUSH,
   OP_COPY,
@@ -49,11 +51,11 @@ inst_t *inst_new_putc(void);
 inst_t *inst_new_puti(void);
 inst_t *inst_new_getc(void);
 inst_t *inst_new_geti(void);
-inst_t *inst_new_label(int label);
-inst_t *inst_new_call(int label);
-inst_t *inst_new_jmp(int label);
-inst_t *inst_new_jz(int label);
-inst_t *inst_new_jneg(int label);
+inst_t *inst_new_label(label_t *label);
+inst_t *inst_new_call(label_t *label);
+inst_t *inst_new_jmp(label_t *label);
+inst_t *inst_new_jz(label_t *label);
+inst_t *inst_new_jneg(label_t *label);
 inst_t *inst_new_ret(void);
 inst_t *inst_new_halt(void);
 

@@ -81,24 +81,24 @@ inst_t *inst_new_geti(void) {
   return inst_new(OP_GETI);
 }
 
-inst_t *inst_new_label(int label) {
-  return inst_new_with_value(OP_LABEL, label);
+inst_t *inst_new_label(label_t *label) {
+  return inst_new_with_value(OP_LABEL, label_get_id(label));
 }
 
-inst_t *inst_new_call(int label) {
-  return inst_new_with_value(OP_CALL, label);
+inst_t *inst_new_call(label_t *label) {
+  return inst_new_with_value(OP_CALL, label_get_id(label));
 }
 
-inst_t *inst_new_jmp(int label) {
-  return inst_new_with_value(OP_JMP, label);
+inst_t *inst_new_jmp(label_t *label) {
+  return inst_new_with_value(OP_JMP, label_get_id(label));
 }
 
-inst_t *inst_new_jz(int label) {
-  return inst_new_with_value(OP_JZ, label);
+inst_t *inst_new_jz(label_t *label) {
+  return inst_new_with_value(OP_JZ, label_get_id(label));
 }
 
-inst_t *inst_new_jneg(int label) {
-  return inst_new_with_value(OP_JNEG, label);
+inst_t *inst_new_jneg(label_t *label) {
+  return inst_new_with_value(OP_JNEG, label_get_id(label));
 }
 
 inst_t *inst_new_ret(void) {
