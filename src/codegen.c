@@ -25,7 +25,6 @@ typedef struct {
 
 struct codegen_t {
   node_t     *root;
-  int         label_count;
   ltable_t   *ltable;
   vartable_t *vartable;
   array_t    *consts;
@@ -71,7 +70,6 @@ static void error(codegen_t *codegen, const char *fmt, ...);
 codegen_t *codegen_new(node_t *root) {
   codegen_t *codegen = (codegen_t *)AK_MEM_MALLOC(sizeof(codegen_t));
   codegen->root = root;
-  codegen->label_count = 0;
   codegen->ltable = ltable_new();
   codegen->vartable = vartable_new(NULL);
   codegen->consts = array_new(64);
@@ -749,7 +747,8 @@ static void emit_inst(codegen_t *codegen, opcode_t opcode, int operand) {
 }
 
 static int alloc_label_id(codegen_t *codegen) {
-  return codegen->label_count++;
+  label_t *label = ltable_alloc(codegen->ltable);
+  return label_get_id(label);
 }
 
 static int allocate(codegen_t *codegen, const char *name, int size) {
