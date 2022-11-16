@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "emitter.h"
+#include "label.h"
 #include "utils/memory.h"
 
 typedef struct {
@@ -34,15 +35,15 @@ static void ws_emit(emitter_t *self, inst_t *inst) {
   switch (inst->opcode) {
   case OP_PUSH:
     emit_chars(self, "SS");
-    encode_integer(self, inst->operand);
+    encode_integer(self, inst->value);
     break;
   case OP_COPY:
     emit_chars(self, "STS");
-    encode_integer(self, inst->operand);
+    encode_integer(self, inst->value);
     break;
   case OP_SLIDE:
     emit_chars(self, "STL");
-    encode_integer(self, inst->operand);
+    encode_integer(self, inst->value);
     break;
   case OP_DUP:
     emit_chars(self, "SLS");
@@ -88,23 +89,23 @@ static void ws_emit(emitter_t *self, inst_t *inst) {
     break;
   case OP_LABEL:
     emit_chars(self, "LSS");
-    encode_uint(self, (unsigned int)inst->operand);
+    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
   case OP_CALL:
     emit_chars(self, "LST");
-    encode_uint(self, (unsigned int)inst->operand);
+    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
   case OP_JMP:
     emit_chars(self, "LSL");
-    encode_uint(self, (unsigned int)inst->operand);
+    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
   case OP_JZ:
     emit_chars(self, "LTS");
-    encode_uint(self, (unsigned int)inst->operand);
+    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
   case OP_JNEG:
     emit_chars(self, "LTT");
-    encode_uint(self, (unsigned int)inst->operand);
+    encode_uint(self, (unsigned int)label_get_unified_id(inst->label));
     break;
   case OP_RET:
     emit_chars(self, "LTL");

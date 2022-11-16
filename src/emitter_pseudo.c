@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "emitter.h"
+#include "label.h"
 #include "utils/memory.h"
 
 typedef struct {
@@ -27,13 +28,13 @@ emitter_t *emitter_pseudo_new(int indent) {
 static void pseudo_emit(emitter_t *self, inst_t *inst) {
   switch (inst->opcode) {
   case OP_PUSH:
-    indent_printf(self, "PUSH %d\n", inst->operand);
+    indent_printf(self, "PUSH %d\n", inst->value);
     break;
   case OP_COPY:
-    indent_printf(self, "COPY %d\n", inst->operand);
+    indent_printf(self, "COPY %d\n", inst->value);
     break;
   case OP_SLIDE:
-    indent_printf(self, "SLIDE %d\n", inst->operand);
+    indent_printf(self, "SLIDE %d\n", inst->value);
     break;
   case OP_DUP:
     indent_puts(self, "DUP");
@@ -78,19 +79,19 @@ static void pseudo_emit(emitter_t *self, inst_t *inst) {
     indent_puts(self, "GETI");
     break;
   case OP_LABEL:
-    printf("L%d:\n", inst->operand);
+    printf("L%d:\n", label_get_unified_id(inst->label));
     break;
   case OP_CALL:
-    indent_printf(self, "CALL L%d\n", inst->operand);
+    indent_printf(self, "CALL L%d\n", label_get_unified_id(inst->label));
     break;
   case OP_JMP:
-    indent_printf(self, "JMP L%d\n", inst->operand);
+    indent_printf(self, "JMP L%d\n", label_get_unified_id(inst->label));
     break;
   case OP_JZ:
-    indent_printf(self, "JZ L%d\n", inst->operand);
+    indent_printf(self, "JZ L%d\n", label_get_unified_id(inst->label));
     break;
   case OP_JNEG:
-    indent_printf(self, "JNEG L%d\n", inst->operand);
+    indent_printf(self, "JNEG L%d\n", label_get_unified_id(inst->label));
     break;
   case OP_RET:
     indent_puts(self, "RET");

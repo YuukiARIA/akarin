@@ -9,7 +9,13 @@ static inst_t *inst_new(opcode_t opcode) {
 
 static inst_t *inst_new_with_value(opcode_t opcode, int value) {
   inst_t *inst = inst_new(opcode);
-  inst->operand = value;
+  inst->value = value;
+  return inst;
+}
+
+static inst_t *inst_new_with_label(opcode_t opcode, label_t *label) {
+  inst_t *inst = inst_new(opcode);
+  inst->label = label;
   return inst;
 }
 
@@ -82,23 +88,23 @@ inst_t *inst_new_geti(void) {
 }
 
 inst_t *inst_new_label(label_t *label) {
-  return inst_new_with_value(OP_LABEL, label_get_id(label));
+  return inst_new_with_label(OP_LABEL, label);
 }
 
 inst_t *inst_new_call(label_t *label) {
-  return inst_new_with_value(OP_CALL, label_get_id(label));
+  return inst_new_with_label(OP_CALL, label);
 }
 
 inst_t *inst_new_jmp(label_t *label) {
-  return inst_new_with_value(OP_JMP, label_get_id(label));
+  return inst_new_with_label(OP_JMP, label);
 }
 
 inst_t *inst_new_jz(label_t *label) {
-  return inst_new_with_value(OP_JZ, label_get_id(label));
+  return inst_new_with_label(OP_JZ, label);
 }
 
 inst_t *inst_new_jneg(label_t *label) {
-  return inst_new_with_value(OP_JNEG, label_get_id(label));
+  return inst_new_with_label(OP_JNEG, label);
 }
 
 inst_t *inst_new_ret(void) {

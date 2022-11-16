@@ -31,7 +31,10 @@ typedef enum {
 
 typedef struct {
   opcode_t opcode;
-  int      operand;
+  union {
+    int      value;
+    label_t *label;
+  };
 } inst_t;
 
 inst_t *inst_new_push(int value);
