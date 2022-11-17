@@ -14,6 +14,7 @@
 typedef enum {
   EMIT_WHITESPACE,
   EMIT_SYMBOLIC,
+  EMIT_MIXED,
   EMIT_PSEUDO_CODE
 } emit_mode_t;
 
@@ -30,6 +31,7 @@ static void show_help(void) {
   printf("Options:\n");
   printf("    -h              Show this help.\n");
   printf("    -s              Transpile into symbolic (S, T, L) code instead of whitespace.\n");
+  printf("    -m              Transpile into whitespace with S, T, L symbols.\n");
   printf("    -p              Transpile into pseudo mnemonic code instead of whitespace.\n");
   printf("    -d              Dump syntax tree.\n");
 }
@@ -42,6 +44,9 @@ static void process_options(int argc, char *argv[], option_t *opt) {
     }
     else if (strcmp(argv[i], "-s") == 0) {
       opt->emit_mode = EMIT_SYMBOLIC;
+    }
+    else if (strcmp(argv[i], "-m") == 0) {
+      opt->emit_mode = EMIT_MIXED;
     }
     else if (strcmp(argv[i], "-p") == 0) {
       opt->emit_mode = EMIT_PSEUDO_CODE;
@@ -61,6 +66,8 @@ static emitter_t *create_emitter(emit_mode_t emit_mode) {
   switch (emit_mode) {
   case EMIT_SYMBOLIC:
     return emitter_ws_new("S", "T", "L", false);
+  case EMIT_MIXED:
+    return emitter_ws_new("S ", "T\t", "L\n", true);
   case EMIT_PSEUDO_CODE:
     return emitter_pseudo_new(8);
   default:
