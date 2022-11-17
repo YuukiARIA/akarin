@@ -60,11 +60,11 @@ static void process_options(int argc, char *argv[], option_t *opt) {
 static emitter_t *create_emitter(emit_mode_t emit_mode) {
   switch (emit_mode) {
   case EMIT_SYMBOLIC:
-    return emitter_ws_new('S', 'T', 'L');
+    return emitter_ws_new("S", "T", "L", false);
   case EMIT_PSEUDO_CODE:
     return emitter_pseudo_new(8);
   default:
-    return emitter_ws_new(' ', '\t', '\n');
+    return emitter_ws_new(" ", "\t", "\n", true);
   }
 }
 

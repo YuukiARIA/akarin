@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "opcode.h"
@@ -6,10 +7,11 @@
 #include "utils/memory.h"
 
 typedef struct {
-  emitter_t base;
-  char      space;
-  char      tab;
-  char      newline;
+  emitter_t   base;
+  const char *space;
+  const char *tab;
+  const char *newline;
+  bool        strict;
 } emitter_ws_t;
 
 static void ws_emit(emitter_t *self, inst_t *inst);
@@ -21,13 +23,14 @@ static void encode_uint_rec(emitter_t *self, unsigned int n);
 static void emit_chars(emitter_t *self, const char *s);
 static void emit_char(emitter_t *self, char c);
 
-emitter_t *emitter_ws_new(char space, char tab, char newline) {
+emitter_t *emitter_ws_new(const char *space, const char *tab, const char *newline, bool strict) {
   emitter_ws_t *emitter = (emitter_ws_t *)AK_MEM_MALLOC(sizeof(emitter_ws_t));
   emitter->base.emit = ws_emit;
   emitter->base.end = ws_end;
   emitter->space = space;
   emitter->tab = tab;
   emitter->newline = newline;
+  emitter->strict = strict;
   return (emitter_t *)emitter;
 }
 
@@ -58,7 +61,7 @@ static void ws_end(emitter_t *self) {
   emitter_ws_t *emitter = (emitter_ws_t *)self;
 
   /* if set to non-pure whitespace format, print newline on the end */
-  if (emitter->space != ' ' || emitter->tab != '\t' || emitter->newline != '\n') {
+  if (!emitter->strict) {
     putchar('\n');
   }
 }
@@ -96,13 +99,13 @@ static void emit_char(emitter_t *self, char c) {
   emitter_ws_t *emitter = (emitter_ws_t *)self;
   switch (c) {
   case 'S':
-    putchar(emitter->space);
+    printf("%s", emitter->space);
     break;
   case 'T':
-    putchar(emitter->tab);
+    printf("%s", emitter->tab);
     break;
   case 'L':
-    putchar(emitter->newline);
+    printf("%s", emitter->newline);
     break;
   default:
     putchar(c);
