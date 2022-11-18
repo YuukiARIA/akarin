@@ -21,9 +21,9 @@ static void print_indent(int indent, uint64_t mask) {
 
   for (int i = 0; i < indent - 1; ++i) {
     bool b = (mask >> (indent - 1 - i)) & 1;
-    printf("%s ", b ? "\u2502" : " ");
+    printf("%s  ", b ? "\u2502" : " ");
   }
-  printf("%s\u2500", (mask & 1) ? "\u251c" : "\u2514");
+  printf("%s\u2500 ", (mask & 1) ? "\u251c" : "\u2514");
 }
 
 static void indent_puts(int indent, uint64_t mask, const char *s) {
